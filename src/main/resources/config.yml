@@ -1,0 +1,24 @@
+# ClaudeReplay
+
+storage:
+  # Folder of the saved replays (relative to plugins/ClaudeReplay). Ignored if another plugin sets its own storage.
+  folder: replays
+
+maps:
+  # Base maps used to rebuild the worlds at playback time: <folder>/<mapId>.
+  # A map can be a world folder (with a "region" folder) or a full level folder.
+  folder: maps
+  # If no map is found, use the loaded world named like the map id.
+  # Only correct when that world was not modified since the recording started (lobby, static map...).
+  use-loaded-worlds: true
+
+recording:
+  # Ticks per compressed segment of the replay file.
+  segment-ticks: 200
+  # Block updates are compared with the real world: the ones that do not match (fake blocks sent to a single
+  # player) are kept in that player's view instead of modifying the map.
+  verify-block-changes: true
+
+playback:
+  # Forward jumps shorter than this are played quickly instead of rebuilding the whole state.
+  fast-forward-limit-seconds: 15

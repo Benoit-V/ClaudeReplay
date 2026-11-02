@@ -96,6 +96,18 @@ public final class RecordingManager {
         }
     }
 
+    void onBlockBroken(UUID player, org.bukkit.block.Block block, org.bukkit.block.data.BlockData data) {
+        for (RecordingImpl recording : recordings.values()) {
+            recording.onBlockBroken(player, block, data);
+        }
+    }
+
+    void onBlockPlaced(UUID player, org.bukkit.block.Block block) {
+        for (RecordingImpl recording : recordings.values()) {
+            recording.onBlockPlaced(player, block);
+        }
+    }
+
     void onHurt(UUID player) {
         for (RecordingImpl recording : recordings.values()) {
             recording.onHurt(player);

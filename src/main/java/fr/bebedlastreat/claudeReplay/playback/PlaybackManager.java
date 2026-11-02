@@ -49,6 +49,8 @@ public final class PlaybackManager {
 
     public PlaybackManager(ClaudeReplay plugin) {
         this.plugin = plugin;
+        ControlItems.init(plugin);
+        ViewerBackup.init(plugin);
         this.mainThread = task -> {
             if (Bukkit.isPrimaryThread()) {
                 task.run();
@@ -162,8 +164,11 @@ public final class PlaybackManager {
         plugin.getStorage().release(replayId, file);
     }
 
-    /** Removes the replay worlds left by a crash. */
+    /** Removes the replay worlds left by a crash and gives back the state of players who were watching. */
     public void cleanupLeftovers() {
+        for (Player player : Bukkit.getOnlinePlayers()) {
+            ViewerBackup.restoreIfPresent(player);
+        }
         String namespace = new NamespacedKey(plugin, "x").getNamespace();
         for (World world : List.copyOf(Bukkit.getWorlds())) {
             if (world.getKey().getNamespace().equals(namespace)) {

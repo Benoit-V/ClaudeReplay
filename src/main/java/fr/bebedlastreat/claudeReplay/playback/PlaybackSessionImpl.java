@@ -119,7 +119,7 @@ public final class PlaybackSessionImpl implements PlaybackSession {
         Viewer viewer = new Viewer(player, user);
         viewers.put(player.getUniqueId(), viewer);
         manager.registerViewer(player.getUniqueId(), this);
-        viewer.setup(plugin);
+        viewer.setup(plugin, this);
         return viewer;
     }
 
@@ -291,6 +291,7 @@ public final class PlaybackSessionImpl implements PlaybackSession {
             return;
         }
         viewer.player.teleport(viewerTarget(viewer, world));
+        viewer.keepFlying();
         viewer.live.onClientWorldChange();
         viewer.cameraEntity = -1;
     }
@@ -493,7 +494,10 @@ public final class PlaybackSessionImpl implements PlaybackSession {
         } else if (tick >= info.durationTicks()) {
             seek(0);
         }
-        viewers.values().forEach(viewer -> viewer.setFrozen(this.paused));
+        viewers.values().forEach(viewer -> {
+            viewer.setFrozen(this.paused);
+            ControlItems.give(viewer.player, this);
+        });
         updateHud();
     }
 
@@ -505,7 +509,7 @@ public final class PlaybackSessionImpl implements PlaybackSession {
     @Override
     public void setSpeed(double speed) {
         this.speed = Math.max(0.1, Math.min(10, speed));
-        viewers.values().forEach(viewer -> viewer.setFrozen(paused));
+        viewers.values().forEach(viewer -> ControlItems.give(viewer.player, this));
         updateHud();
     }
 

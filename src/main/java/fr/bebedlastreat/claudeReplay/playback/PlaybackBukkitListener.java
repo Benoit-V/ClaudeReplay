@@ -1,5 +1,8 @@
 package fr.bebedlastreat.claudeReplay.playback;
 
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
+import org.bukkit.Bukkit;
 import org.bukkit.World;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
@@ -7,6 +10,22 @@ import org.bukkit.event.Cancellable;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.Action;
+import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.event.block.BlockPlaceEvent;
+import org.bukkit.event.entity.EntityDamageEvent;
+import org.bukkit.event.entity.FoodLevelChangeEvent;
+import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.InventoryDragEvent;
+import org.bukkit.event.player.PlayerDropItemEvent;
+import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.player.PlayerSwapHandItemsEvent;
+import org.bukkit.inventory.EquipmentSlot;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
 import org.bukkit.event.block.BlockBurnEvent;
 import org.bukkit.event.block.BlockFadeEvent;
 import org.bukkit.event.block.BlockFormEvent;
@@ -41,8 +60,106 @@ public final class PlaybackBukkitListener implements Listener {
 
     @EventHandler(priority = EventPriority.MONITOR)
     public void onJoin(PlayerJoinEvent event) {
+        // The server stopped while this player was watching a replay.
+        ViewerBackup.restoreIfPresent(event.getPlayer());
         for (PlaybackSessionImpl session : manager.getSessions()) {
             session.hideFromViewers(event.getPlayer());
+        }
+    }
+
+    // ------------------------------------------------------------------ control items
+
+    private final Map<UUID, Integer> lastUse = new HashMap<>();
+
+    @EventHandler(priority = EventPriority.LOWEST)
+    public void onInteract(PlayerInteractEvent event) {
+        Player player = event.getPlayer();
+        Optional<PlaybackSessionImpl> session = manager.getSession(player.getUniqueId());
+        if (session.isEmpty()) {
+            return;
+        }
+        event.setCancelled(true);
+        if (event.getHand() != EquipmentSlot.HAND || event.getAction() == Action.PHYSICAL) {
+            return;
+        }
+        ControlItems.Action action = ControlItems.actionOf(event.getItem());
+        if (action == null) {
+            return;
+        }
+        // The client may send several interactions for one click.
+        int tick = Bukkit.getCurrentTick();
+        Integer last = lastUse.put(player.getUniqueId(), tick);
+        if (last != null && tick - last < 3) {
+            return;
+        }
+        boolean rightClick = event.getAction() == Action.RIGHT_CLICK_AIR || event.getAction() == Action.RIGHT_CLICK_BLOCK;
+        if (action == ControlItems.Action.POINT_OF_VIEW && !rightClick) {
+            return;
+        }
+        try {
+            ControlItems.use(player, session.get(), action, rightClick);
+        } catch (IllegalArgumentException | IllegalStateException e) {
+            player.sendMessage(Component.text(e.getMessage(), NamedTextColor.RED));
+        }
+    }
+
+    @EventHandler(priority = EventPriority.LOWEST)
+    public void onInventoryClick(InventoryClickEvent event) {
+        if (!(event.getWhoClicked() instanceof Player player) || !manager.isViewer(player.getUniqueId())) {
+            return;
+        }
+        event.setCancelled(true);
+        if (event.getView().getTopInventory().getHolder() instanceof ControlItems.Menu menu && event.getClickedInventory() == event.getView().getTopInventory()) {
+            ControlItems.clickMenu(player, menu, event.getCurrentItem());
+        }
+    }
+
+    @EventHandler(priority = EventPriority.LOWEST)
+    public void onInventoryDrag(InventoryDragEvent event) {
+        if (manager.isViewer(event.getWhoClicked().getUniqueId())) {
+            event.setCancelled(true);
+        }
+    }
+
+    @EventHandler(priority = EventPriority.LOWEST)
+    public void onDrop(PlayerDropItemEvent event) {
+        if (manager.isViewer(event.getPlayer().getUniqueId())) {
+            event.setCancelled(true);
+        }
+    }
+
+    @EventHandler(priority = EventPriority.LOWEST)
+    public void onSwapHands(PlayerSwapHandItemsEvent event) {
+        if (manager.isViewer(event.getPlayer().getUniqueId())) {
+            event.setCancelled(true);
+        }
+    }
+
+    @EventHandler(priority = EventPriority.LOWEST)
+    public void onBreak(BlockBreakEvent event) {
+        if (manager.isViewer(event.getPlayer().getUniqueId())) {
+            event.setCancelled(true);
+        }
+    }
+
+    @EventHandler(priority = EventPriority.LOWEST)
+    public void onPlace(BlockPlaceEvent event) {
+        if (manager.isViewer(event.getPlayer().getUniqueId())) {
+            event.setCancelled(true);
+        }
+    }
+
+    @EventHandler(priority = EventPriority.LOWEST)
+    public void onDamage(EntityDamageEvent event) {
+        if (event.getEntity() instanceof Player player && manager.isViewer(player.getUniqueId())) {
+            event.setCancelled(true);
+        }
+    }
+
+    @EventHandler(priority = EventPriority.LOWEST)
+    public void onHunger(FoodLevelChangeEvent event) {
+        if (manager.isViewer(event.getEntity().getUniqueId())) {
+            event.setCancelled(true);
         }
     }
 

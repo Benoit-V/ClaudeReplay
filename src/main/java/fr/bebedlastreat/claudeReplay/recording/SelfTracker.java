@@ -19,9 +19,19 @@ import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerPl
 import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerSpawnEntity;
 import fr.bebedlastreat.claudeReplay.packet.PacketCodec;
 import io.github.retrooper.packetevents.util.SpigotConversionUtil;
+import com.github.retrooper.packetevents.protocol.sound.SoundCategory;
+import com.github.retrooper.packetevents.protocol.sound.Sounds;
+import com.github.retrooper.packetevents.util.Vector3i;
+import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerEffect;
+import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerSoundEffect;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.Registry;
+import org.bukkit.Sound;
+import org.bukkit.SoundGroup;
+import org.bukkit.block.Block;
+import org.bukkit.block.data.BlockData;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.EntityEquipment;
 
@@ -56,6 +66,8 @@ final class SelfTracker {
     private byte[] lastMetadata;
     private final org.bukkit.inventory.ItemStack[] lastEquipment = new org.bukkit.inventory.ItemStack[SLOTS.length];
     private GameMode lastGameMode;
+    private double walked;
+    private int nextStep = 1;
 
     SelfTracker(RecordingImpl recording, Player player, int subject) {
         this.recording = recording;
@@ -133,6 +145,7 @@ final class SelfTracker {
         if (location.getYaw() != yaw) {
             add(tick, Server.ENTITY_HEAD_LOOK, new WrapperPlayServerEntityHeadLook(entityId, location.getYaw()));
         }
+        footsteps(tick, location);
         x = location.getX();
         y = location.getY();
         z = location.getZ();
@@ -149,6 +162,52 @@ final class SelfTracker {
                     PlayerPackets.profile(player), true, player.getPing(), SpigotConversionUtil.fromBukkitGameMode(gameMode), null, null);
             add(tick, Server.PLAYER_INFO_UPDATE, new WrapperPlayServerPlayerInfoUpdate(WrapperPlayServerPlayerInfoUpdate.Action.UPDATE_GAME_MODE, info));
         }
+    }
+
+    // ------------------------------------------------------------------ own sounds
+    // The server never sends a player the sounds of their own actions: their client plays them locally.
+    // They are stored as packets received by the player (so they are merged with the identical packets received
+    // by the players around).
+
+    private void addSound(int tick, Server type, PacketWrapper<?> wrapper) {
+        recording.addPacket(tick, subject, type, PacketCodec.encodeNew(wrapper));
+    }
+
+    private static com.github.retrooper.packetevents.protocol.sound.Sound sound(Sound sound) {
+        return Sounds.getByNameOrCreate(Registry.SOUNDS.getKeyOrThrow(sound).asString());
+    }
+
+    /** Same rhythm as vanilla: a step every ~1.67 blocks walked on the ground, none when sneaking. */
+    private void footsteps(int tick, Location location) {
+        double dx = location.getX() - x;
+        double dz = location.getZ() - z;
+        if (!player.isOnGround() || player.isSneaking() || player.isFlying() || player.isInsideVehicle()) {
+            return;
+        }
+        walked += Math.sqrt(dx * dx + dz * dz) * 0.6;
+        if (walked <= nextStep) {
+            return;
+        }
+        nextStep = (int) walked + 1;
+        Block below = location.clone().subtract(0, 0.2, 0).getBlock();
+        if (below.getType().isAir()) {
+            return;
+        }
+        SoundGroup group = below.getBlockData().getSoundGroup();
+        addSound(tick, Server.SOUND_EFFECT, new WrapperPlayServerSoundEffect(sound(group.getStepSound()), SoundCategory.PLAYER,
+                new Vector3d(location.getX(), location.getY(), location.getZ()), group.getVolume() * 0.15f, group.getPitch()));
+    }
+
+    void blockBroken(int tick, Block block, BlockData data) {
+        // Level event 2001: break particles and sound.
+        addSound(tick, Server.EFFECT, new WrapperPlayServerEffect(2001, new Vector3i(block.getX(), block.getY(), block.getZ()),
+                SpigotConversionUtil.fromBukkitBlockData(data).getGlobalId(), false));
+    }
+
+    void blockPlaced(int tick, Block block) {
+        SoundGroup group = block.getBlockData().getSoundGroup();
+        addSound(tick, Server.SOUND_EFFECT, new WrapperPlayServerSoundEffect(sound(group.getPlaceSound()), SoundCategory.BLOCK,
+                new Vector3d(block.getX() + 0.5, block.getY() + 0.5, block.getZ() + 0.5), (group.getVolume() + 1) / 2, group.getPitch() * 0.8f));
     }
 
     private void sampleMetadata(int tick) {

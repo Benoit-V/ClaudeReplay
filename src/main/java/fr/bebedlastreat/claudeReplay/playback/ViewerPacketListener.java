@@ -12,6 +12,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -22,7 +23,8 @@ import java.util.UUID;
  */
 public final class ViewerPacketListener extends PacketListenerAbstract {
 
-    private static final int CHANGE_GAME_MODE = 3;
+    /** CHANGE_GAME_STATE reasons: start/stop raining, rain level, thunder level. */
+    private static final Set<Integer> WEATHER_EVENTS = Set.of(1, 2, 7, 8);
 
     private final Plugin plugin;
     private final PlaybackManager manager;
@@ -48,8 +50,11 @@ public final class ViewerPacketListener extends PacketListenerAbstract {
                  SPAWN_ENTITY, SPAWN_LIVING_ENTITY, SPAWN_PLAYER, SPAWN_PAINTING, SPAWN_EXPERIENCE_ORB, WAYPOINT ->
                     event.setCancelled(true);
             case CHANGE_GAME_STATE -> {
+                // Only the weather of the playback world is hidden (the replay sends its own). The other events
+                // must pass, especially START_LOADING_CHUNKS: without it the client never leaves the loading
+                // state after a world change and the viewer cannot move.
                 Object buffer = event.getByteBuf();
-                if (ByteBufHelper.getUnsignedByte(buffer, ByteBufHelper.readerIndex(buffer)) != CHANGE_GAME_MODE) {
+                if (WEATHER_EVENTS.contains((int) ByteBufHelper.getUnsignedByte(buffer, ByteBufHelper.readerIndex(buffer)))) {
                     event.setCancelled(true);
                 }
             }

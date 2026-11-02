@@ -184,6 +184,20 @@ public final class RecordingImpl implements Recording {
         }
     }
 
+    void onBlockBroken(UUID player, org.bukkit.block.Block block, BlockData data) {
+        Member member = capturing.get(player);
+        if (member != null && member.self != null) {
+            member.self.blockBroken(getCurrentTick(), block, data);
+        }
+    }
+
+    void onBlockPlaced(UUID player, org.bukkit.block.Block block) {
+        Member member = capturing.get(player);
+        if (member != null && member.self != null) {
+            member.self.blockPlaced(getCurrentTick(), block);
+        }
+    }
+
     void onHurt(UUID player) {
         Member member = capturing.get(player);
         if (member != null && member.self != null) {

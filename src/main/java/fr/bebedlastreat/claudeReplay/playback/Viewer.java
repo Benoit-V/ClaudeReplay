@@ -9,6 +9,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.scoreboard.Scoreboard;
 
@@ -37,6 +38,8 @@ final class Viewer {
     private final Scoreboard scoreboard;
     private final boolean allowFlight;
     private final boolean flying;
+    private final ItemStack[] inventory;
+    private final int heldSlot;
     private final Set<UUID> hiddenPlayers = new HashSet<>();
 
     Viewer(Player player, User user) {
@@ -49,20 +52,40 @@ final class Viewer {
         this.scoreboard = player.getScoreboard();
         this.allowFlight = player.getAllowFlight();
         this.flying = player.isFlying();
+        this.inventory = player.getInventory().getContents().clone();
+        for (int i = 0; i < inventory.length; i++) {
+            inventory[i] = inventory[i] == null ? null : inventory[i].clone();
+        }
+        this.heldSlot = player.getInventory().getHeldItemSlot();
     }
 
     Integer pointOfView() {
         return pipeline.getPointOfView();
     }
 
-    /** Puts the player in viewer mode. */
-    void setup(Plugin plugin) {
-        player.setGameMode(GameMode.SPECTATOR);
+    /** Puts the player in viewer mode: creative, flying, with the control items. */
+    void setup(Plugin plugin, PlaybackSessionImpl session) {
+        ViewerBackup.save(player, inventory, returnLocation, gameMode, allowFlight);
+        player.closeInventory();
+        player.getInventory().clear();
+        player.setGameMode(GameMode.CREATIVE);
+        player.setAllowFlight(true);
+        player.setFlying(true);
         player.setScoreboard(Bukkit.getScoreboardManager().getNewScoreboard());
         for (Player other : Bukkit.getOnlinePlayers()) {
             hide(plugin, other);
         }
+        ControlItems.give(player, session);
+        player.getInventory().setHeldItemSlot(3);
         player.showBossBar(hud);
+    }
+
+    /** Called after a teleport: flying is reset when changing world. */
+    void keepFlying() {
+        if (player.getGameMode() == GameMode.CREATIVE && !player.isFlying()) {
+            player.setAllowFlight(true);
+            player.setFlying(true);
+        }
     }
 
     /** Hides a player of the server from the viewer (and the viewer from them). */
@@ -103,9 +126,15 @@ final class Viewer {
         setFrozen(false);
         live.flush();
         player.hideBossBar(hud);
+        if (player.getOpenInventory().getTopInventory().getHolder() instanceof ControlItems.Menu) {
+            player.closeInventory();
+        }
         if (teleport) {
             player.teleport(returnLocation);
         }
+        player.getInventory().setContents(inventory);
+        player.getInventory().setHeldItemSlot(heldSlot);
+        ViewerBackup.clear(player);
         player.setGameMode(gameMode);
         player.setAllowFlight(allowFlight);
         player.setFlying(flying && allowFlight);

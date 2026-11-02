@@ -58,7 +58,7 @@ public final class ControlPanel {
         }
         player.sendMessage(Component.text()
                 .append(button("Quitter", "/replay leave", "Quitter le replay", NamedTextColor.RED))
-                .append(Component.text("  Astuce : clic sur un joueur ou menu spectateur (molette) pour prendre son point de vue, sneak pour revenir.", NamedTextColor.DARK_GRAY))
+                .append(Component.text("  Astuce : utilise les items de ta barre, clique sur un joueur pour prendre son point de vue, sneak pour revenir.", NamedTextColor.DARK_GRAY))
                 .build());
     }
 }

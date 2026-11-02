@@ -33,8 +33,13 @@ import java.util.stream.Stream;
  */
 final class PlaybackWorld {
 
-    /** Never copied: entities are replayed from the packets, POI and lock files are useless. */
-    private static final Set<String> EXCLUDED = Set.of("entities", "poi", "session.lock", "uid.dat");
+    /**
+     * Never copied: entities are replayed from the packets, POI and lock files are useless, and the Paper world
+     * identity ({@code data/paper/metadata.dat}, {@code paper-world.yml}) would make Paper refuse the copy as a
+     * duplicate of the original world. Forced chunk tickets would keep chunks loaded for nothing.
+     */
+    private static final Set<String> EXCLUDED = Set.of("entities", "poi", "session.lock", "uid.dat",
+            "paper", "paper-world.yml", "chunk_tickets.dat");
 
     private final String mapId;
     private final NamespacedKey key;

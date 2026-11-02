@@ -1,3 +1,3 @@
 rootProject.name = "ClaudeReplay"
 
-include("api")
+include("api", "core", "platform-legacy", "platform-modern")

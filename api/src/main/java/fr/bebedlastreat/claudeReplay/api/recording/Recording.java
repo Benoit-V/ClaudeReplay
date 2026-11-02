@@ -3,7 +3,6 @@ package fr.bebedlastreat.claudeReplay.api.recording;
 import fr.bebedlastreat.claudeReplay.api.replay.ReplayInfo;
 import org.bukkit.Location;
 import org.bukkit.World;
-import org.bukkit.block.data.BlockData;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -84,10 +83,10 @@ public interface Recording {
     void setMetadata(@NotNull String key, @Nullable String value);
 
     /**
-     * Manually records a block modification of the recorded world. Block changes seen by players are recorded
-     * automatically; use this for changes made where no player can see them.
+     * Records the current state of a block of the recorded world. Block changes seen by players are recorded
+     * automatically; call this after changing a block where no player can see it.
      */
-    void recordBlockChange(@NotNull Location location, @NotNull BlockData data);
+    void recordBlockChange(@NotNull Location location);
 
     /**
      * Stops the recording and saves it in the storage.

@@ -45,11 +45,20 @@ public interface ClaudeReplayAPI {
      *
      * @param replayId the replay to watch
      * @param viewers  the players who will watch it (at least one)
-     * @return a future completed on the main thread once the viewers are inside the replay
+     * @return a future completed on the main thread once the viewers are inside the replay; it fails if the
+     * replay comes from a newer server version (see {@link #isPlayable(ReplayInfo)})
      */
     @NotNull CompletableFuture<PlaybackSession> startPlayback(@NotNull UUID replayId, @NotNull Collection<? extends Player> viewers);
 
     /** The playback session the given player is watching, if any. */
+    /**
+     * A replay can be watched on a server of the same version as the one that recorded it, or of a newer version.
+     */
+    boolean isPlayable(@NotNull ReplayInfo replay);
+
+    /** Protocol version of this server, compared with {@link ReplayInfo#protocolVersion()}. */
+    int getServerProtocolVersion();
+
     @NotNull Optional<PlaybackSession> getPlayback(@NotNull Player viewer);
 
     @NotNull Collection<PlaybackSession> getPlaybacks();

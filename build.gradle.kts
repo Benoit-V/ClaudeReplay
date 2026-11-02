@@ -1,22 +1,48 @@
 plugins {
-    id("java-library")
+    id("java")
     id("xyz.jpenilla.run-paper") version "3.1.0"
 }
 
 val packetEventsVersion = "2.14.0"
 
-repositories {
-    mavenCentral()
-    maven("https://repo.papermc.io/repository/maven-public/")
-    maven("https://repo.codemc.io/repository/maven-releases/")
+allprojects {
+    repositories {
+        mavenCentral()
+        maven("https://repo.papermc.io/repository/maven-public/")
+        maven("https://repo.codemc.io/repository/maven-releases/")
+        maven("https://hub.spigotmc.org/nexus/content/repositories/snapshots/")
+        maven("https://oss.sonatype.org/content/repositories/snapshots/")
+    }
+}
+
+subprojects {
+    apply(plugin = "java-library")
+
+    extensions.configure<JavaPluginExtension> {
+        toolchain.languageVersion = JavaLanguageVersion.of(25)
+    }
+
+    tasks.withType<JavaCompile>().configureEach {
+        options.encoding = "UTF-8"
+        // The common code runs on 1.8.8 forks (Java 17+); only the modern platform may use newer bytecode.
+        options.release = if (project.name == "platform-modern") 25 else 17
+    }
+
+    dependencies {
+        "compileOnly"("org.jetbrains:annotations:26.0.2-1")
+    }
+}
+
+// The plugin jar: api + core + every platform, loaded by version at runtime.
+val bundled = configurations.create("bundled") {
+    isTransitive = false
 }
 
 dependencies {
-    compileOnly("io.papermc.paper:paper-api:26.3.build.+")
-    // PacketEvents is installed as a separate plugin on the server (see plugin.yml "depend").
-    compileOnly("com.github.retrooper:packetevents-spigot:$packetEventsVersion")
-    // The API classes are bundled inside the plugin jar.
-    implementation(project(":api"))
+    bundled(project(":api"))
+    bundled(project(":core"))
+    bundled(project(":platform-legacy"))
+    bundled(project(":platform-modern"))
 }
 
 java {
@@ -24,21 +50,13 @@ java {
 }
 
 tasks {
-    withType<JavaCompile>().configureEach {
-        options.encoding = "UTF-8"
-    }
-
     jar {
-        // Bundle the API module (the only runtime dependency) into the plugin jar.
-        dependsOn(configurations.runtimeClasspath)
-        from(configurations.runtimeClasspath.map { classpath -> classpath.map { zipTree(it) } })
+        dependsOn(bundled)
+        from(provider { bundled.files.map { zipTree(it) } })
         duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     }
 
     runServer {
-        // Configure the Minecraft version for our task.
-        // This is the only required configuration besides applying the plugin.
-        // Your plugin's jar (or shadowJar if present) will be used automatically.
         minecraftVersion("26.3")
         jvmArgs("-Xms2G", "-Xmx2G")
         downloadPlugins {
@@ -48,6 +66,7 @@ tasks {
 
     processResources {
         val props = mapOf("version" to version)
+        inputs.properties(props)
         filesMatching("plugin.yml") {
             expand(props)
         }

@@ -48,7 +48,7 @@ public record ReplayInfo(@NotNull UUID id, @NotNull String name, long createdAt,
 
     /** The world active at the given tick. */
     public @NotNull ReplayWorld getWorldAt(int tick) {
-        ReplayWorld current = worlds.getFirst();
+        ReplayWorld current = worlds.get(0);
         for (ReplayWorld world : worlds) {
             if (world.startTick() > tick) {
                 break;

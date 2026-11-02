@@ -7,25 +7,17 @@ base {
     archivesName = "ClaudeReplay-api"
 }
 
-repositories {
-    mavenCentral()
-    maven("https://repo.papermc.io/repository/maven-public/")
-}
-
 dependencies {
-    compileOnly("io.papermc.paper:paper-api:26.3.build.+")
+    // Oldest supported server API: everything here also exists on newer servers.
+    compileOnly("org.spigotmc:spigot-api:1.8.8-R0.1-SNAPSHOT")
 }
 
 java {
-    toolchain.languageVersion = JavaLanguageVersion.of(25)
     withSourcesJar()
     withJavadocJar()
 }
 
 tasks {
-    withType<JavaCompile>().configureEach {
-        options.encoding = "UTF-8"
-    }
     withType<Javadoc>().configureEach {
         options.encoding = "UTF-8"
         (options as StandardJavadocDocletOptions).addStringOption("Xdoclint:none", "-quiet")

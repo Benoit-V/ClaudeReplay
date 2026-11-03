@@ -1,4 +1,8 @@
-# ClaudeReplay
+<p align="center">
+  <img src="assets/logo.svg" alt="ClaudeReplay logo" width="160">
+</p>
+
+<h1 align="center">ClaudeReplay</h1>
 
 ClaudeReplay records what players see on a Minecraft server and plays it back in game.
 

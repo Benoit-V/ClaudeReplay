@@ -1,32 +1,32 @@
-[CENTER][IMG]BASE_URL/banner.png[/IMG]
+[CENTER][IMG]https://raw.githubusercontent.com/Benoit-V/ClaudeReplay/master/assets/spigot/banner.png[/IMG]
 
 [SIZE=5][B]Record what your players see. Replay it in game.[/B][/SIZE]
 [SIZE=4]Packet-based replays for Spigot 1.8.8 and Paper 26.3, with a developer API.[/SIZE][/CENTER]
 
-[IMG]BASE_URL/header-features.png[/IMG]
+[IMG]https://raw.githubusercontent.com/Benoit-V/ClaudeReplay/master/assets/spigot/header-features.png[/IMG]
 
-[IMG]BASE_URL/features.png[/IMG]
+[IMG]https://raw.githubusercontent.com/Benoit-V/ClaudeReplay/master/assets/spigot/features.png[/IMG]
 
-[IMG]BASE_URL/header-how-it-works.png[/IMG]
+[IMG]https://raw.githubusercontent.com/Benoit-V/ClaudeReplay/master/assets/spigot/header-how-it-works.png[/IMG]
 
-[IMG]BASE_URL/how-it-works.png[/IMG]
+[IMG]https://raw.githubusercontent.com/Benoit-V/ClaudeReplay/master/assets/spigot/how-it-works.png[/IMG]
 
 ClaudeReplay records the packets received by each player in a world, together with the block changes. Replays never contain the world itself: when a replay is watched, its base map (by default [FONT=Courier New]plugins/ClaudeReplay/maps/<mapId>[/FONT]) is copied into a temporary world and the recorded changes are applied on top of it.
 
-[IMG]BASE_URL/header-versions.png[/IMG]
+[IMG]https://raw.githubusercontent.com/Benoit-V/ClaudeReplay/master/assets/spigot/header-versions.png[/IMG]
 
-[IMG]BASE_URL/versions.png[/IMG]
+[IMG]https://raw.githubusercontent.com/Benoit-V/ClaudeReplay/master/assets/spigot/versions.png[/IMG]
 
 Replays recorded on 1.8.8 are converted to the modern protocol while they play. Paintings, signs, maps, entity attributes and particles carrying a block or an item have no modern equivalent and are skipped.
 
-[IMG]BASE_URL/header-commands.png[/IMG]
+[IMG]https://raw.githubusercontent.com/Benoit-V/ClaudeReplay/master/assets/spigot/header-commands.png[/IMG]
 
-[IMG]BASE_URL/commands.png[/IMG]
+[IMG]https://raw.githubusercontent.com/Benoit-V/ClaudeReplay/master/assets/spigot/commands.png[/IMG]
 
 [B]Permissions:[/B] [FONT=Courier New]claudereplay.record[/FONT], [FONT=Courier New]claudereplay.play[/FONT], [FONT=Courier New]claudereplay.admin[/FONT] (includes both).
 Viewers also get hotbar items: points of view, markers, backward, play / pause, forward, speed, controls and leave.
 
-[IMG]BASE_URL/header-api.png[/IMG]
+[IMG]https://raw.githubusercontent.com/Benoit-V/ClaudeReplay/master/assets/spigot/header-api.png[/IMG]
 
 [CODE=Java]ClaudeReplayAPI api = ClaudeReplayProvider.get();
 
@@ -42,7 +42,7 @@ recording.stop().thenAccept(replay -> broadcast("Replay saved: " + replay.id()))
 
 Events ([FONT=Courier New]RecordingStartEvent[/FONT], [FONT=Courier New]RecordingPlayerAddEvent[/FONT], [FONT=Courier New]PlaybackStartEvent[/FONT]…), playback control, custom storage ([FONT=Courier New]ReplayStorage[/FONT]) and custom map sources ([FONT=Courier New]MapResolver[/FONT]) are documented in the README.
 
-[IMG]BASE_URL/header-installation.png[/IMG]
+[IMG]https://raw.githubusercontent.com/Benoit-V/ClaudeReplay/master/assets/spigot/header-installation.png[/IMG]
 
 [LIST=1]
 [*]Install [URL='https://www.spigotmc.org/resources/packetevents-api.80279/']packetevents[/URL] 2.14.0 or newer.

@@ -10,6 +10,7 @@ import fr.bebedlastreat.claudeReplay.format.ReplayFileReader;
 import fr.bebedlastreat.claudeReplay.packet.PacketCodec;
 import fr.bebedlastreat.claudeReplay.platform.Platform;
 import fr.bebedlastreat.claudeReplay.platform.Platforms;
+import fr.bebedlastreat.claudeReplay.util.Lang;
 import fr.bebedlastreat.claudeReplay.util.Threads;
 import com.github.retrooper.packetevents.manager.server.ServerVersion;
 import fr.bebedlastreat.claudeReplay.util.Files2;
@@ -83,8 +84,8 @@ public final class PlaybackManager {
                         ReplayFileReader reader = ReplayFileReader.open(file);
                         if (!isPlayable(reader.getProtocolVersion())) {
                             reader.close();
-                            throw new IllegalStateException("Ce replay vient d'un serveur en " + reader.getInfo().serverVersion()
-                                    + ", plus récent que ce serveur (" + Platforms.get().minecraftVersion() + ")");
+                            throw new IllegalStateException(Lang.tr("replays.too-recent", "version", reader.getInfo().serverVersion(),
+                                    "server", Platforms.get().minecraftVersion()));
                         }
                         Prepared prepared = new Prepared(reader, file, new ConcurrentHashMap<>(), new AtomicBoolean());
                         preparation.add(prepared);

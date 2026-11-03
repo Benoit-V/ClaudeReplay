@@ -11,6 +11,7 @@ import fr.bebedlastreat.claudeReplay.platform.Platforms;
 import fr.bebedlastreat.claudeReplay.playback.ControlPanel;
 import fr.bebedlastreat.claudeReplay.playback.PlaybackSessionImpl;
 import fr.bebedlastreat.claudeReplay.recording.RecordingImpl;
+import fr.bebedlastreat.claudeReplay.util.Lang;
 import fr.bebedlastreat.claudeReplay.util.Text;
 import fr.bebedlastreat.claudeReplay.util.TimeFormat;
 import net.kyori.adventure.text.Component;
@@ -90,16 +91,14 @@ public final class ReplayCommand implements TabExecutor {
 
     private void help(CommandSender sender) {
         Text.send(sender, Component.text("ClaudeReplay", NamedTextColor.GOLD));
-        info(sender, "/replay record start [nom] [map] | stop [nom] | list | marker <nom>");
-        info(sender, "/replay menu | list | play <replay> | info <replay> | delete <replay>");
-        info(sender, "/replay toggle | speed <x> | seek <temps> | skip <±secondes> | pov <joueur> | free | invite <joueur> | leave");
+        Lang.lines("help").forEach(line -> info(sender, line));
     }
 
     // ------------------------------------------------------------------ recording
 
     private void record(CommandSender sender, String[] args) {
         if (!sender.hasPermission("claudereplay.record")) {
-            error(sender, "Tu n'as pas la permission.");
+            error(sender, Lang.tr("general.no-permission"));
             return;
         }
         String action = args.length > 1 ? args[1].toLowerCase(Locale.ROOT) : "list";
@@ -119,21 +118,21 @@ public final class ReplayCommand implements TabExecutor {
                     options.mapId(args[3]);
                 }
                 Recording recording = plugin.getRecordingManager().start(options.build());
-                Text.send(sender, Component.text("Enregistrement de " + world.getName() + " démarré : " + recording.getName()
-                        + " (map " + recording.getMapId() + ")", NamedTextColor.GREEN));
+                Text.send(sender, Component.text(Lang.tr("record.started", "world", world.getName(), "name", recording.getName(),
+                        "map", recording.getMapId()), NamedTextColor.GREEN));
             }
             case "stop" -> {
                 RecordingImpl recording = findRecording(sender, args.length > 2 ? args[2] : null);
                 if (recording == null) {
                     return;
                 }
-                info(sender, "Arrêt et sauvegarde de " + recording.getName() + "...");
+                info(sender, Lang.tr("record.stopping", "name", recording.getName()));
                 recording.stop().whenComplete((replay, error) -> {
                     if (error != null) {
-                        error(sender, "Échec de la sauvegarde : " + error.getMessage());
+                        error(sender, Lang.tr("record.save-failed", "error", error.getMessage()));
                     } else {
-                        Text.send(sender, Component.text("Replay sauvegardé : " + replay.name() + " (" + TimeFormat.format(replay.durationTicks()) + ") ", NamedTextColor.GREEN)
-                                .append(Component.text("[Regarder]", NamedTextColor.AQUA).clickEvent(ClickEvent.runCommand("/replay play " + replay.id()))));
+                        Text.send(sender, Component.text(Lang.tr("record.saved", "name", replay.name(), "duration", TimeFormat.format(replay.durationTicks())), NamedTextColor.GREEN)
+                                .append(Component.text(Lang.tr("record.watch-button"), NamedTextColor.AQUA).clickEvent(ClickEvent.runCommand("/replay play " + replay.id()))));
                     }
                 });
             }
@@ -142,18 +141,18 @@ public final class ReplayCommand implements TabExecutor {
                 if (recording == null) {
                     return;
                 }
-                String name = args.length > 2 ? String.join(" ", List.of(args).subList(2, args.length)) : "Marqueur";
+                String name = args.length > 2 ? String.join(" ", List.of(args).subList(2, args.length)) : Lang.tr("record.default-marker");
                 recording.addMarker(name);
-                info(sender, "Marqueur ajouté à " + TimeFormat.format(recording.getCurrentTick()));
+                info(sender, Lang.tr("record.marker-added", "time", TimeFormat.format(recording.getCurrentTick())));
             }
             default -> {
                 if (plugin.getRecordingManager().isEmpty()) {
-                    info(sender, "Aucun enregistrement en cours.");
+                    info(sender, Lang.tr("record.none-running"));
                     return;
                 }
                 for (RecordingImpl recording : plugin.getRecordingManager().active()) {
-                    info(sender, "● " + recording.getName() + " - " + recording.getWorld().getName() + " - " + TimeFormat.format(recording.getCurrentTick())
-                            + " - " + recording.getPlayers().size() + " joueur(s)");
+                    info(sender, Lang.tr("record.list-entry", "name", recording.getName(), "world", recording.getWorld().getName(),
+                            "time", TimeFormat.format(recording.getCurrentTick()), "players", recording.getPlayers().size()));
                 }
             }
         }
@@ -170,7 +169,7 @@ public final class ReplayCommand implements TabExecutor {
         if (name == null && recordings.size() == 1) {
             return recordings.get(0);
         }
-        error(sender, "Enregistrement introuvable.");
+        error(sender, Lang.tr("record.not-found"));
         return null;
     }
 
@@ -178,27 +177,27 @@ public final class ReplayCommand implements TabExecutor {
 
     private void list(CommandSender sender) {
         if (!sender.hasPermission("claudereplay.play")) {
-            error(sender, "Tu n'as pas la permission.");
+            error(sender, Lang.tr("general.no-permission"));
             return;
         }
         plugin.getStorage().list().whenComplete((replays, error) -> Bukkit.getScheduler().runTask(plugin, () -> {
             if (error != null) {
-                error(sender, "Impossible de lister les replays : " + error.getMessage());
+                error(sender, Lang.tr("replays.list-failed", "error", error.getMessage()));
                 return;
             }
             if (replays.isEmpty()) {
-                info(sender, "Aucun replay.");
+                info(sender, Lang.tr("replays.none"));
                 return;
             }
-            Text.send(sender, Component.text("Replays (" + replays.size() + ")", NamedTextColor.GOLD));
-            SimpleDateFormat format = new SimpleDateFormat("dd/MM HH:mm");
+            Text.send(sender, Component.text(Lang.tr("replays.list-header", "count", replays.size()), NamedTextColor.GOLD));
+            SimpleDateFormat format = new SimpleDateFormat(Lang.tr("replays.date-format"));
             for (ReplayInfo replay : replays.subList(0, Math.min(20, replays.size()))) {
                 Text.send(sender, Component.text("▶ ", NamedTextColor.GREEN)
                         .append(Component.text(replay.name(), NamedTextColor.WHITE))
-                        .append(Component.text(" " + format.format(new Date(replay.createdAt())) + " · " + TimeFormat.format(replay.durationTicks())
-                                + " · " + replay.players().size() + " joueur(s)", NamedTextColor.GRAY))
+                        .append(Component.text(Lang.tr("replays.list-entry", "date", format.format(new Date(replay.createdAt())),
+                                "duration", TimeFormat.format(replay.durationTicks()), "players", replay.players().size()), NamedTextColor.GRAY))
                         .clickEvent(ClickEvent.runCommand("/replay play " + replay.id()))
-                        .hoverEvent(HoverEvent.showText(Component.text("Regarder " + replay.id()))));
+                        .hoverEvent(HoverEvent.showText(Component.text(Lang.tr("replays.list-hover", "id", replay.id())))));
             }
         }));
     }
@@ -206,20 +205,20 @@ public final class ReplayCommand implements TabExecutor {
     /** Resolves a replay by id, id prefix or name (most recent first). */
     private void withReplay(CommandSender sender, String[] args, Consumer<ReplayInfo> action) {
         if (args.length < 2) {
-            error(sender, "Précise le replay (id ou nom).");
+            error(sender, Lang.tr("replays.specify"));
             return;
         }
         String query = args[1];
         plugin.getStorage().list().whenComplete((replays, error) -> Bukkit.getScheduler().runTask(plugin, () -> {
             if (error != null) {
-                error(sender, "Impossible de lire les replays : " + error.getMessage());
+                error(sender, Lang.tr("replays.read-failed", "error", error.getMessage()));
                 return;
             }
             Optional<ReplayInfo> match = replays.stream().filter(replay -> replay.id().toString().equalsIgnoreCase(query)).findFirst()
                     .or(() -> replays.stream().filter(replay -> replay.id().toString().startsWith(query.toLowerCase(Locale.ROOT))).findFirst())
                     .or(() -> replays.stream().filter(replay -> replay.name().equalsIgnoreCase(query)).findFirst());
             if (match.isEmpty()) {
-                error(sender, "Replay introuvable : " + query);
+                error(sender, Lang.tr("replays.not-found", "query", query));
                 return;
             }
             try {
@@ -232,22 +231,23 @@ public final class ReplayCommand implements TabExecutor {
 
     private void describe(CommandSender sender, ReplayInfo replay) {
         Text.send(sender, Component.text(replay.name(), NamedTextColor.GOLD));
-        info(sender, "Id : " + replay.id());
-        info(sender, "Durée : " + TimeFormat.format(replay.durationTicks()) + " · Version : " + replay.serverVersion()
-                + (plugin.getPlaybackManager().isPlayable(replay) ? "" : " (plus récente que ce serveur : illisible ici)"));
-        info(sender, "Joueurs : " + String.join(", ", replay.players().stream()
-                .map(player -> player.name() + (player.clientVersion() == null ? "" : " (" + player.clientVersion() + ")")).toList()));
-        replay.worlds().forEach(world -> info(sender, "Monde à " + TimeFormat.format(world.startTick()) + " : " + world.worldName() + " (map " + world.mapId() + ")"));
-        replay.markers().forEach(marker -> info(sender, "Marqueur à " + TimeFormat.format(marker.tick()) + " : " + marker.name()));
+        info(sender, Lang.tr("info.id", "id", replay.id()));
+        info(sender, Lang.tr("info.duration", "duration", TimeFormat.format(replay.durationTicks()), "version", replay.serverVersion())
+                + (plugin.getPlaybackManager().isPlayable(replay) ? "" : Lang.tr("info.unplayable")));
+        info(sender, Lang.tr("info.players", "players", String.join(", ", replay.players().stream()
+                .map(player -> player.name() + (player.clientVersion() == null ? "" : " (" + player.clientVersion() + ")")).toList())));
+        replay.worlds().forEach(world -> info(sender, Lang.tr("info.world", "time", TimeFormat.format(world.startTick()),
+                "world", world.worldName(), "map", world.mapId())));
+        replay.markers().forEach(marker -> info(sender, Lang.tr("info.marker", "time", TimeFormat.format(marker.tick()), "name", marker.name())));
     }
 
     private void play(CommandSender sender, String[] args) {
         if (!(sender instanceof Player player)) {
-            error(sender, "Commande réservée aux joueurs.");
+            error(sender, Lang.tr("general.players-only"));
             return;
         }
         if (!sender.hasPermission("claudereplay.play")) {
-            error(sender, "Tu n'as pas la permission.");
+            error(sender, Lang.tr("general.no-permission"));
             return;
         }
         withReplay(sender, args, replay -> play(player, replay));
@@ -255,28 +255,27 @@ public final class ReplayCommand implements TabExecutor {
 
     private void play(Player player, ReplayInfo replay) {
         if (!plugin.getPlaybackManager().isPlayable(replay)) {
-            error(player, "Ce replay vient d'un serveur en " + replay.serverVersion() + ", plus récent que celui-ci ("
-                    + Platforms.get().minecraftVersion() + ").");
+            error(player, Lang.tr("replays.too-recent", "version", replay.serverVersion(), "server", Platforms.get().minecraftVersion()));
             return;
         }
-        info(player, "Chargement de " + replay.name() + "...");
+        info(player, Lang.tr("replays.loading", "name", replay.name()));
         CompletableFuture<?> future = plugin.getPlaybackManager().start(replay.id(), List.of(player));
         future.whenComplete((session, error) -> {
             if (error != null) {
                 Throwable cause = error.getCause() != null ? error.getCause() : error;
                 plugin.getLogger().warning("Cannot play " + replay.id() + ": " + cause);
-                Bukkit.getScheduler().runTask(plugin, () -> error(player, "Impossible de lancer le replay : " + cause.getMessage()));
+                Bukkit.getScheduler().runTask(plugin, () -> error(player, Lang.tr("replays.start-failed", "error", cause.getMessage())));
             }
         });
     }
 
     private void menu(CommandSender sender) {
         if (!(sender instanceof Player player)) {
-            error(sender, "Commande réservée aux joueurs.");
+            error(sender, Lang.tr("general.players-only"));
             return;
         }
         if (!sender.hasPermission("claudereplay.play")) {
-            error(sender, "Tu n'as pas la permission.");
+            error(sender, Lang.tr("general.no-permission"));
             return;
         }
         browser.open(player, 0);
@@ -284,15 +283,15 @@ public final class ReplayCommand implements TabExecutor {
 
     private void delete(CommandSender sender, String[] args) {
         if (!sender.hasPermission("claudereplay.admin")) {
-            error(sender, "Tu n'as pas la permission.");
+            error(sender, Lang.tr("general.no-permission"));
             return;
         }
         withReplay(sender, args, replay -> plugin.getStorage().delete(replay.id()).whenComplete((deleted, error) ->
                 Bukkit.getScheduler().runTask(plugin, () -> {
                     if (error != null || !deleted) {
-                        error(sender, "Suppression impossible.");
+                        error(sender, Lang.tr("replays.delete-failed"));
                     } else {
-                        info(sender, "Replay " + replay.name() + " supprimé.");
+                        info(sender, Lang.tr("replays.deleted", "name", replay.name()));
                     }
                 })));
     }
@@ -301,12 +300,12 @@ public final class ReplayCommand implements TabExecutor {
 
     private void viewer(CommandSender sender, String sub, String[] args) {
         if (!(sender instanceof Player player)) {
-            error(sender, "Commande réservée aux joueurs.");
+            error(sender, Lang.tr("general.players-only"));
             return;
         }
         Optional<PlaybackSessionImpl> found = plugin.getPlaybackManager().getSession(player.getUniqueId());
         if (found.isEmpty()) {
-            error(sender, "Tu ne regardes aucun replay.");
+            error(sender, Lang.tr("general.not-watching"));
             return;
         }
         PlaybackSessionImpl session = found.get();
@@ -316,21 +315,25 @@ public final class ReplayCommand implements TabExecutor {
             case "toggle" -> session.setPaused(!session.isPaused());
             case "speed" -> {
                 if (args.length < 2) {
-                    error(sender, "/replay speed <0.1-10>");
+                    error(sender, Lang.tr("usage.speed"));
                     return;
                 }
-                session.setSpeed(Double.parseDouble(args[1].replace("x", "")));
+                try {
+                    session.setSpeed(Double.parseDouble(args[1].replace("x", "")));
+                } catch (NumberFormatException e) {
+                    error(sender, Lang.tr("general.invalid-number", "value", args[1]));
+                }
             }
             case "seek" -> {
                 if (args.length < 2) {
-                    error(sender, "/replay seek <mm:ss | secondes | ticks t>");
+                    error(sender, Lang.tr("usage.seek"));
                     return;
                 }
                 session.seek(TimeFormat.parse(args[1]));
             }
             case "skip" -> {
                 if (args.length < 2) {
-                    error(sender, "/replay skip <±secondes>");
+                    error(sender, Lang.tr("usage.skip"));
                     return;
                 }
                 String value = args[1];
@@ -340,26 +343,26 @@ public final class ReplayCommand implements TabExecutor {
             }
             case "pov" -> {
                 if (args.length < 2) {
-                    error(sender, "/replay pov <joueur>");
+                    error(sender, Lang.tr("usage.pov"));
                     return;
                 }
                 ReplayPlayer target = session.getReplay().getPlayer(args[1])
-                        .orElseThrow(() -> new IllegalArgumentException(args[1] + " n'est pas dans ce replay."));
+                        .orElseThrow(() -> new IllegalArgumentException(Lang.tr("viewer.not-in-replay", "player", args[1])));
                 session.setPointOfView(player, target.uuid());
             }
             case "free" -> session.setPointOfView(player, null);
             case "invite" -> {
                 if (args.length < 2) {
-                    error(sender, "/replay invite <joueur>");
+                    error(sender, Lang.tr("usage.invite"));
                     return;
                 }
                 Player invited = Bukkit.getPlayerExact(args[1]);
                 if (invited == null) {
-                    error(sender, args[1] + " n'est pas connecté.");
+                    error(sender, Lang.tr("viewer.not-online", "player", args[1]));
                     return;
                 }
                 session.addViewer(invited);
-                info(sender, invited.getName() + " regarde le replay avec toi.");
+                info(sender, Lang.tr("viewer.invited", "player", invited.getName()));
             }
             case "leave" -> session.removeViewer(player);
             case "controls" -> ControlPanel.send(player, session);

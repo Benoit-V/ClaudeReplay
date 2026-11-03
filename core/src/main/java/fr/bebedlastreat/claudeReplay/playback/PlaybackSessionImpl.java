@@ -20,6 +20,7 @@ import fr.bebedlastreat.claudeReplay.packet.PacketCodec;
 import fr.bebedlastreat.claudeReplay.platform.Platform;
 import fr.bebedlastreat.claudeReplay.platform.Platforms;
 import fr.bebedlastreat.claudeReplay.translate.Translator;
+import fr.bebedlastreat.claudeReplay.util.Lang;
 import fr.bebedlastreat.claudeReplay.util.ServerTicks;
 import fr.bebedlastreat.claudeReplay.util.Text;
 import fr.bebedlastreat.claudeReplay.util.TimeFormat;
@@ -154,7 +155,7 @@ public final class PlaybackSessionImpl implements PlaybackSession {
             }
         } catch (IOException | RuntimeException e) {
             plugin.getLogger().log(Level.SEVERE, "Error while playing the replay " + info.name() + ", stopping it", e);
-            viewers.values().forEach(viewer -> Text.error(viewer.player, "Erreur pendant la lecture du replay."));
+            viewers.values().forEach(viewer -> Text.error(viewer.player, Lang.tr("playback.error")));
             stop();
         }
     }
@@ -385,7 +386,7 @@ public final class PlaybackSessionImpl implements PlaybackSession {
         float progress = info.durationTicks() <= 0 ? 0 : Math.min(1, (float) tick / info.durationTicks());
         for (Viewer viewer : viewers.values()) {
             Integer pov = viewer.pointOfView();
-            String view = pov == null ? "Caméra libre" : "POV " + info.players().get(pov).name();
+            String view = pov == null ? Lang.tr("playback.free-camera") : Lang.tr("playback.hud-pov", "player", info.players().get(pov).name());
             Component title = Component.text((paused ? "⏸ " : "▶ ") + TimeFormat.format(tick) + " / " + TimeFormat.format(info.durationTicks())
                     + "  ·  x" + formatSpeed(speed) + "  ·  " + view);
             viewer.hud.update(title, progress, paused);
@@ -581,10 +582,9 @@ public final class PlaybackSessionImpl implements PlaybackSession {
             if (position != null) {
                 viewer.player.teleport(new Location(currentWorld.world(), position[0], position[1], position[2], (float) position[3], (float) position[4]));
             }
-            Text.actionBar(viewer.player, Component.text("Point de vue de " + info.players().get(subject).name()
-                    + " (sneak pour revenir en caméra libre)", NamedTextColor.AQUA));
+            Text.actionBar(viewer.player, Component.text(Lang.tr("playback.pov-of", "player", info.players().get(subject).name()), NamedTextColor.AQUA));
         } else {
-            Text.actionBar(viewer.player, Component.text("Caméra libre", NamedTextColor.AQUA));
+            Text.actionBar(viewer.player, Component.text(Lang.tr("playback.free-camera"), NamedTextColor.AQUA));
         }
         updateHud();
     }

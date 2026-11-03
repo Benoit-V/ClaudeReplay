@@ -3,6 +3,7 @@ package fr.bebedlastreat.claudeReplay.playback;
 import fr.bebedlastreat.claudeReplay.api.playback.PlaybackSession;
 import fr.bebedlastreat.claudeReplay.api.replay.ReplayMarker;
 import fr.bebedlastreat.claudeReplay.api.replay.ReplayPlayer;
+import fr.bebedlastreat.claudeReplay.util.Lang;
 import fr.bebedlastreat.claudeReplay.util.Text;
 import fr.bebedlastreat.claudeReplay.util.TimeFormat;
 import net.kyori.adventure.text.Component;
@@ -29,37 +30,37 @@ public final class ControlPanel {
 
     public static void send(Player player, PlaybackSession session) {
         Component space = Component.space();
-        Text.send(player, Component.text("━━━━━━ Replay : " + session.getReplay().name() + " ━━━━━━", NamedTextColor.GOLD));
+        Text.send(player, Component.text(Lang.tr("controls.header", "name", session.getReplay().name()), NamedTextColor.GOLD));
         Text.send(player, Component.text()
-                .append(button("⏯", "/replay toggle", "Pause / lecture", NamedTextColor.GREEN)).append(space)
-                .append(button("-30s", "/replay skip -30", "Reculer de 30 secondes", NamedTextColor.AQUA)).append(space)
-                .append(button("-5s", "/replay skip -5", "Reculer de 5 secondes", NamedTextColor.AQUA)).append(space)
-                .append(button("+5s", "/replay skip 5", "Avancer de 5 secondes", NamedTextColor.AQUA)).append(space)
-                .append(button("+30s", "/replay skip 30", "Avancer de 30 secondes", NamedTextColor.AQUA)).append(space)
-                .append(button("x0.5", "/replay speed 0.5", "Ralenti", NamedTextColor.YELLOW)).append(space)
-                .append(button("x1", "/replay speed 1", "Vitesse normale", NamedTextColor.YELLOW)).append(space)
-                .append(button("x2", "/replay speed 2", "Accéléré", NamedTextColor.YELLOW)).append(space)
-                .append(button("x4", "/replay speed 4", "Très accéléré", NamedTextColor.YELLOW))
+                .append(button("⏯", "/replay toggle", Lang.tr("controls.toggle"), NamedTextColor.GREEN)).append(space)
+                .append(button("-30s", "/replay skip -30", Lang.tr("controls.backward", "seconds", 30), NamedTextColor.AQUA)).append(space)
+                .append(button("-5s", "/replay skip -5", Lang.tr("controls.backward", "seconds", 5), NamedTextColor.AQUA)).append(space)
+                .append(button("+5s", "/replay skip 5", Lang.tr("controls.forward", "seconds", 5), NamedTextColor.AQUA)).append(space)
+                .append(button("+30s", "/replay skip 30", Lang.tr("controls.forward", "seconds", 30), NamedTextColor.AQUA)).append(space)
+                .append(button("x0.5", "/replay speed 0.5", Lang.tr("controls.slow"), NamedTextColor.YELLOW)).append(space)
+                .append(button("x1", "/replay speed 1", Lang.tr("controls.normal"), NamedTextColor.YELLOW)).append(space)
+                .append(button("x2", "/replay speed 2", Lang.tr("controls.fast"), NamedTextColor.YELLOW)).append(space)
+                .append(button("x4", "/replay speed 4", Lang.tr("controls.faster"), NamedTextColor.YELLOW))
                 .build());
 
-        TextComponent.Builder pov = Component.text().append(Component.text("Points de vue : ", NamedTextColor.GRAY))
-                .append(button("Libre", "/replay free", "Caméra libre (vue fusionnée)", NamedTextColor.WHITE));
+        TextComponent.Builder pov = Component.text().append(Component.text(Lang.tr("controls.points-of-view"), NamedTextColor.GRAY))
+                .append(button(Lang.tr("controls.free"), "/replay free", Lang.tr("controls.free-hover"), NamedTextColor.WHITE));
         for (ReplayPlayer recorded : session.getReplay().players()) {
-            pov.append(space).append(button(recorded.name(), "/replay pov " + recorded.name(), "Voir par les yeux de " + recorded.name(), NamedTextColor.LIGHT_PURPLE));
+            pov.append(space).append(button(recorded.name(), "/replay pov " + recorded.name(), Lang.tr("controls.pov-hover", "player", recorded.name()), NamedTextColor.LIGHT_PURPLE));
         }
         Text.send(player, pov.build());
 
         if (!session.getReplay().markers().isEmpty()) {
-            TextComponent.Builder markers = Component.text().append(Component.text("Marqueurs : ", NamedTextColor.GRAY));
+            TextComponent.Builder markers = Component.text().append(Component.text(Lang.tr("controls.markers"), NamedTextColor.GRAY));
             for (ReplayMarker marker : session.getReplay().markers()) {
                 markers.append(button(marker.name() + " " + TimeFormat.format(marker.tick()), "/replay seek " + marker.tick() + "t",
-                        "Aller à " + TimeFormat.format(marker.tick()), NamedTextColor.GOLD)).append(space);
+                        Lang.tr("controls.marker-hover", "time", TimeFormat.format(marker.tick())), NamedTextColor.GOLD)).append(space);
             }
             Text.send(player, markers.build());
         }
         Text.send(player, Component.text()
-                .append(button("Quitter", "/replay leave", "Quitter le replay", NamedTextColor.RED))
-                .append(Component.text("  Astuce : utilise les items de ta barre, clique sur un joueur pour prendre son point de vue, sneak pour revenir.", NamedTextColor.DARK_GRAY))
+                .append(button(Lang.tr("controls.leave"), "/replay leave", Lang.tr("controls.leave-hover"), NamedTextColor.RED))
+                .append(Component.text(Lang.tr("controls.tip"), NamedTextColor.DARK_GRAY))
                 .build());
     }
 }

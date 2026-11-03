@@ -6,6 +6,7 @@ import fr.bebedlastreat.claudeReplay.api.replay.ReplayPlayer;
 import fr.bebedlastreat.claudeReplay.api.replay.ReplayWorld;
 import fr.bebedlastreat.claudeReplay.platform.Platform;
 import fr.bebedlastreat.claudeReplay.platform.Platforms;
+import fr.bebedlastreat.claudeReplay.util.Lang;
 import fr.bebedlastreat.claudeReplay.util.Text;
 import fr.bebedlastreat.claudeReplay.util.TimeFormat;
 import net.kyori.adventure.text.Component;
@@ -52,7 +53,7 @@ public final class ReplayBrowser {
                 return;
             }
             if (error != null) {
-                Text.error(player, "Impossible de lister les replays : " + error.getMessage());
+                Text.error(player, Lang.tr("replays.list-failed", "error", error.getMessage()));
                 return;
             }
             List<ReplayInfo> sorted = new ArrayList<>(replays);
@@ -68,10 +69,10 @@ public final class ReplayBrowser {
         int from = shown * PER_PAGE;
         int to = Math.min(replays.size(), from + PER_PAGE);
 
-        Menus.Menu menu = Menus.create(6, Component.text(pages > 1 ? "Replays " + (shown + 1) + "/" + pages : "Replays"));
+        Menus.Menu menu = Menus.create(6, Component.text(pages > 1 ? Lang.tr("menus.replays.title-page", "page", shown + 1, "pages", pages) : Lang.tr("menus.replays.title")));
         if (replays.isEmpty()) {
-            menu.set(22, item(Platform.Icon.PAPER, Component.text("Aucun replay", NamedTextColor.GRAY),
-                    List.of(hint("Lance un enregistrement avec /replay record start"))));
+            menu.set(22, item(Platform.Icon.PAPER, Component.text(Lang.tr("menus.replays.none"), NamedTextColor.GRAY),
+                    hints("menus.replays.none-lore")));
         }
         for (int i = from; i < to; i++) {
             ReplayInfo replay = replays.get(i);
@@ -85,42 +86,40 @@ public final class ReplayBrowser {
                     player.closeInventory();
                     onPlay.accept(player, replay);
                 } else {
-                    Text.error(player, "Ce replay vient d'un serveur en " + replay.serverVersion() + ", plus récent que celui-ci ("
-                            + platform.minecraftVersion() + ").");
+                    Text.error(player, Lang.tr("replays.too-recent", "version", replay.serverVersion(), "server", platform.minecraftVersion()));
                 }
             });
         }
         if (shown > 0) {
-            menu.set(45, item(Platform.Icon.ARROW, Component.text("◀ Page précédente", NamedTextColor.YELLOW), List.of()),
+            menu.set(45, item(Platform.Icon.ARROW, Component.text(Lang.tr("general.previous-page"), NamedTextColor.YELLOW), List.of()),
                     click -> show(player, replays, shown - 1));
         }
-        menu.set(49, item(Platform.Icon.COMPASS, Component.text(replays.size() + " replay(s)", NamedTextColor.AQUA),
-                List.of(hint("Serveur en " + platform.minecraftVersion()),
-                        hint("Les replays de versions plus récentes"), hint("ne peuvent pas être lus ici."))));
+        menu.set(49, item(Platform.Icon.COMPASS, Component.text(Lang.tr("menus.replays.count", "count", replays.size()), NamedTextColor.AQUA),
+                hints("menus.replays.count-lore", "version", platform.minecraftVersion())));
         if (shown < pages - 1) {
-            menu.set(53, item(Platform.Icon.ARROW, Component.text("Page suivante ▶", NamedTextColor.YELLOW), List.of()),
+            menu.set(53, item(Platform.Icon.ARROW, Component.text(Lang.tr("general.next-page"), NamedTextColor.YELLOW), List.of()),
                     click -> show(player, replays, shown + 1));
         }
         menu.open(player);
     }
 
     private static List<Component> describe(ReplayInfo replay, boolean playable) {
-        SimpleDateFormat date = new SimpleDateFormat("dd/MM/yyyy HH:mm");
+        SimpleDateFormat date = new SimpleDateFormat(Lang.tr("menus.replays.date-format"));
         List<Component> lore = new ArrayList<>();
-        lore.add(line("Date : ", date.format(new Date(replay.createdAt()))));
-        lore.add(line("Durée : ", TimeFormat.format(replay.durationTicks())));
-        lore.add(line("Version : ", replay.serverVersion()));
+        lore.add(line(Lang.tr("menus.replays.date"), date.format(new Date(replay.createdAt()))));
+        lore.add(line(Lang.tr("menus.replays.duration"), TimeFormat.format(replay.durationTicks())));
+        lore.add(line(Lang.tr("menus.replays.version"), replay.serverVersion()));
 
         Set<String> maps = new LinkedHashSet<>();
         for (ReplayWorld world : replay.worlds()) {
             maps.add(world.mapId());
         }
-        lore.add(line(maps.size() > 1 ? "Maps : " : "Map : ", String.join(", ", maps)));
+        lore.add(line(Lang.tr(maps.size() > 1 ? "menus.replays.maps" : "menus.replays.map"), String.join(", ", maps)));
         if (!replay.markers().isEmpty()) {
-            lore.add(line("Marqueurs : ", String.valueOf(replay.markers().size())));
+            lore.add(line(Lang.tr("menus.replays.markers"), String.valueOf(replay.markers().size())));
         }
 
-        lore.add(line("Joueurs (" + replay.players().size() + ") :", ""));
+        lore.add(line(Lang.tr("menus.replays.players", "count", replay.players().size()), ""));
         List<ReplayPlayer> players = replay.players();
         for (int i = 0; i < players.size() && i < SHOWN_PLAYERS; i++) {
             ReplayPlayer player = players.get(i);
@@ -128,16 +127,16 @@ public final class ReplayBrowser {
                     .append(Component.text(player.clientVersion() == null ? "" : " (" + player.clientVersion() + ")", NamedTextColor.DARK_GRAY)));
         }
         if (players.size() > SHOWN_PLAYERS) {
-            lore.add(hint(" ... et " + (players.size() - SHOWN_PLAYERS) + " autre(s)"));
+            lore.add(hint(Lang.tr("menus.replays.more-players", "count", players.size() - SHOWN_PLAYERS)));
         }
 
         lore.add(Component.empty());
         if (playable) {
-            lore.add(Component.text("Clic gauche : regarder", NamedTextColor.GREEN));
+            lore.add(Component.text(Lang.tr("menus.replays.watch"), NamedTextColor.GREEN));
         } else {
-            lore.add(Component.text("Version plus récente que ce serveur", NamedTextColor.RED));
+            lore.add(Component.text(Lang.tr("menus.replays.too-recent"), NamedTextColor.RED));
         }
-        lore.add(hint("Clic droit : détails dans le chat"));
+        lore.add(hint(Lang.tr("menus.replays.details")));
         return lore;
     }
 
@@ -147,6 +146,10 @@ public final class ReplayBrowser {
 
     private static Component hint(String text) {
         return Component.text(text, NamedTextColor.GRAY);
+    }
+
+    private static List<Component> hints(String key, Object... placeholders) {
+        return Lang.lines(key, placeholders).stream().map(ReplayBrowser::hint).toList();
     }
 
     private static org.bukkit.inventory.ItemStack item(Platform.Icon icon, Component name, List<Component> lore) {

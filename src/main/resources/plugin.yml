@@ -7,23 +7,23 @@ load: POSTWORLD
 depend: [ packetevents ]
 
 authors: [ BebeDlaStreat, Claude ]
-description: Enregistre ce que voient les joueurs et le rejoue en jeu.
+description: Records what players see and replays it in game.
 
 commands:
   replay:
-    description: Enregistrer et regarder des replays.
+    description: Record and watch replays.
     usage: /replay
     aliases: [ replays, crp ]
 
 permissions:
   claudereplay.record:
-    description: Démarrer et arrêter des enregistrements.
+    description: Start and stop recordings.
     default: op
   claudereplay.play:
-    description: Lister et regarder des replays.
+    description: List and watch replays.
     default: op
   claudereplay.admin:
-    description: Supprimer des replays.
+    description: Delete replays.
     default: op
     children:
       claudereplay.record: true

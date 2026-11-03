@@ -34,7 +34,7 @@ public final class TimeFormat {
         }
         String[] parts = value.split(":");
         if (parts.length > 3) {
-            throw new IllegalArgumentException("Invalid time: " + input);
+            throw new IllegalArgumentException(Lang.tr("general.invalid-time", "value", input));
         }
         double seconds = 0;
         for (String part : parts) {

@@ -5,6 +5,7 @@ import fr.bebedlastreat.claudeReplay.api.replay.ReplayPlayer;
 import fr.bebedlastreat.claudeReplay.menu.Menus;
 import fr.bebedlastreat.claudeReplay.platform.Platform;
 import fr.bebedlastreat.claudeReplay.platform.Platforms;
+import fr.bebedlastreat.claudeReplay.util.Lang;
 import fr.bebedlastreat.claudeReplay.util.Text;
 import fr.bebedlastreat.claudeReplay.util.TimeFormat;
 import net.kyori.adventure.text.Component;
@@ -44,6 +45,11 @@ final class ControlItems {
         return Component.text(text, NamedTextColor.GRAY);
     }
 
+    /** The lines of a message key, as grey lore. */
+    static List<Component> hints(String key, Object... placeholders) {
+        return Lang.lines(key, placeholders).stream().map(ControlItems::hint).toList();
+    }
+
     private static ItemStack item(Platform.Icon icon, Component name, List<Component> lore) {
         return Platforms.get().icon(icon, name.decoration(TextDecoration.ITALIC, false),
                 lore.stream().map(line -> line.decoration(TextDecoration.ITALIC, false)).toList());
@@ -52,24 +58,25 @@ final class ControlItems {
     /** Fills the viewer's hotbar with the controls, reflecting the session state. */
     static void give(Player player, PlaybackSessionImpl session) {
         PlayerInventory inventory = player.getInventory();
-        inventory.setItem(Action.POINT_OF_VIEW.ordinal(), item(Platform.Icon.PLAYER_HEAD, Component.text("Points de vue", NamedTextColor.LIGHT_PURPLE),
-                List.of(hint("Clic droit : choisir un joueur"), hint("Sneak : revenir en caméra libre"))));
+        inventory.setItem(Action.POINT_OF_VIEW.ordinal(), item(Platform.Icon.PLAYER_HEAD,
+                Component.text(Lang.tr("items.points-of-view.name"), NamedTextColor.LIGHT_PURPLE), hints("items.points-of-view.lore")));
         int markers = session.getReplay().markers().size();
-        inventory.setItem(Action.MARKERS.ordinal(), item(Platform.Icon.NAME_TAG, Component.text("Marqueurs (" + markers + ")", NamedTextColor.GOLD),
-                List.of(hint(markers == 0 ? "Aucun temps fort dans ce replay" : "Clic : aller à un temps fort"))));
-        inventory.setItem(Action.BACKWARD.ordinal(), item(Platform.Icon.BACKWARD, Component.text("⏪ Reculer", NamedTextColor.RED),
-                List.of(hint("Clic droit : -10 secondes"), hint("Clic gauche : -1 minute"))));
+        inventory.setItem(Action.MARKERS.ordinal(), item(Platform.Icon.NAME_TAG, Component.text(Lang.tr("items.markers.name", "count", markers), NamedTextColor.GOLD),
+                hints(markers == 0 ? "items.markers.lore-none" : "items.markers.lore")));
+        inventory.setItem(Action.BACKWARD.ordinal(), item(Platform.Icon.BACKWARD, Component.text(Lang.tr("items.backward.name"), NamedTextColor.RED),
+                hints("items.backward.lore")));
         inventory.setItem(Action.PLAY_PAUSE.ordinal(), session.isPaused()
-                ? item(Platform.Icon.PLAY, Component.text("▶ Lecture", NamedTextColor.GREEN), List.of(hint("Clic : reprendre")))
-                : item(Platform.Icon.PAUSE, Component.text("⏸ Pause", NamedTextColor.YELLOW), List.of(hint("Clic : mettre en pause"))));
-        inventory.setItem(Action.FORWARD.ordinal(), item(Platform.Icon.FORWARD, Component.text("⏩ Avancer", NamedTextColor.AQUA),
-                List.of(hint("Clic droit : +10 secondes"), hint("Clic gauche : +1 minute"))));
-        inventory.setItem(Action.SPEED.ordinal(), item(Platform.Icon.CLOCK, Component.text("Vitesse x" + PlaybackSessionImpl.formatSpeed(session.getSpeed()), NamedTextColor.GOLD),
-                List.of(hint("Clic droit : plus vite"), hint("Clic gauche : moins vite"))));
-        inventory.setItem(Action.CONTROLS.ordinal(), item(Platform.Icon.BOOK, Component.text("Panneau de contrôle", NamedTextColor.WHITE),
-                List.of(hint("Clic : afficher les commandes et marqueurs"))));
-        inventory.setItem(Action.LEAVE.ordinal(), item(Platform.Icon.BARRIER, Component.text("Quitter le replay", NamedTextColor.RED),
-                List.of(hint("Clic : revenir là où tu étais"))));
+                ? item(Platform.Icon.PLAY, Component.text(Lang.tr("items.play.name"), NamedTextColor.GREEN), hints("items.play.lore"))
+                : item(Platform.Icon.PAUSE, Component.text(Lang.tr("items.pause.name"), NamedTextColor.YELLOW), hints("items.pause.lore")));
+        inventory.setItem(Action.FORWARD.ordinal(), item(Platform.Icon.FORWARD, Component.text(Lang.tr("items.forward.name"), NamedTextColor.AQUA),
+                hints("items.forward.lore")));
+        inventory.setItem(Action.SPEED.ordinal(), item(Platform.Icon.CLOCK,
+                Component.text(Lang.tr("items.speed.name", "speed", PlaybackSessionImpl.formatSpeed(session.getSpeed())), NamedTextColor.GOLD),
+                hints("items.speed.lore")));
+        inventory.setItem(Action.CONTROLS.ordinal(), item(Platform.Icon.BOOK, Component.text(Lang.tr("items.controls.name"), NamedTextColor.WHITE),
+                hints("items.controls.lore")));
+        inventory.setItem(Action.LEAVE.ordinal(), item(Platform.Icon.BARRIER, Component.text(Lang.tr("items.leave.name"), NamedTextColor.RED),
+                hints("items.leave.lore")));
     }
 
     /** Action of the item in the given hotbar slot, null for none. */
@@ -116,14 +123,14 @@ final class ControlItems {
 
     /** Version of a player's client, as shown in the menus. */
     static String clientVersion(ReplayPlayer player) {
-        return player.clientVersion() != null ? player.clientVersion() : "inconnue";
+        return player.clientVersion() != null ? player.clientVersion() : Lang.tr("menus.point-of-view.unknown-version");
     }
 
     private static void openPointOfViewMenu(Player player, PlaybackSessionImpl session) {
         List<ReplayPlayer> players = session.getReplay().players();
-        Menus.Menu menu = Menus.create(Menus.rowsFor(players.size() + 1), Component.text("Point de vue"));
-        menu.set(0, item(Platform.Icon.ENDER_EYE, Component.text("Caméra libre", NamedTextColor.AQUA),
-                List.of(hint("Vue fusionnée de tous les joueurs"))), click -> {
+        Menus.Menu menu = Menus.create(Menus.rowsFor(players.size() + 1), Component.text(Lang.tr("menus.point-of-view.title")));
+        menu.set(0, item(Platform.Icon.ENDER_EYE, Component.text(Lang.tr("menus.point-of-view.free-camera"), NamedTextColor.AQUA),
+                hints("menus.point-of-view.free-camera-lore")), click -> {
             if (stillWatching(player, session)) {
                 player.closeInventory();
                 session.setPointOfView(player, null);
@@ -135,8 +142,8 @@ final class ControlItems {
             ReplayPlayer recorded = players.get(i);
             boolean watched = recorded.uuid().equals(current);
             List<Component> lore = List.of(
-                    Component.text("Version : " + clientVersion(recorded), NamedTextColor.DARK_AQUA).decoration(TextDecoration.ITALIC, false),
-                    hint(watched ? "Point de vue actuel" : "Clic : voir par ses yeux").decoration(TextDecoration.ITALIC, false));
+                    Component.text(Lang.tr("menus.point-of-view.version", "version", clientVersion(recorded)), NamedTextColor.DARK_AQUA).decoration(TextDecoration.ITALIC, false),
+                    hint(Lang.tr(watched ? "menus.point-of-view.current" : "menus.point-of-view.click")).decoration(TextDecoration.ITALIC, false));
             ItemStack head = Platforms.get().head(recorded.uuid(), recorded.name(),
                     Component.text(recorded.name(), watched ? NamedTextColor.GREEN : NamedTextColor.WHITE).decoration(TextDecoration.ITALIC, false), lore);
             menu.set(i + 1, head, click -> {
@@ -153,7 +160,7 @@ final class ControlItems {
     private static void openMarkersMenu(Player player, PlaybackSessionImpl session, int page) {
         List<ReplayMarker> markers = session.getReplay().markers();
         if (markers.isEmpty()) {
-            Text.actionBar(player, Component.text("Aucun marqueur dans ce replay", NamedTextColor.GRAY));
+            Text.actionBar(player, Component.text(Lang.tr("menus.markers.none"), NamedTextColor.GRAY));
             return;
         }
         int pages = (markers.size() + MARKERS_PER_PAGE - 1) / MARKERS_PER_PAGE;
@@ -162,17 +169,17 @@ final class ControlItems {
         int to = Math.min(markers.size(), from + MARKERS_PER_PAGE);
 
         Menus.Menu menu = Menus.create(pages > 1 ? 6 : Menus.rowsFor(to - from),
-                Component.text(pages > 1 ? "Marqueurs " + (shown + 1) + "/" + pages : "Marqueurs"));
+                Component.text(pages > 1 ? Lang.tr("menus.markers.title-page", "page", shown + 1, "pages", pages) : Lang.tr("menus.markers.title")));
         int now = session.getTick();
         for (int i = from; i < to; i++) {
             ReplayMarker marker = markers.get(i);
             boolean past = marker.tick() <= now;
             List<Component> lore = new ArrayList<>();
-            lore.add(hint("À " + TimeFormat.format(marker.tick()) + (past ? " (déjà passé)" : "")));
+            lore.add(hint(Lang.tr(past ? "menus.markers.at-past" : "menus.markers.at", "time", TimeFormat.format(marker.tick()))));
             if (marker.data() != null && !marker.data().isBlank()) {
                 lore.add(Component.text(marker.data(), NamedTextColor.DARK_GRAY));
             }
-            lore.add(hint("Clic : y aller"));
+            lore.add(hint(Lang.tr("menus.markers.click")));
             menu.set(i - from, item(past ? Platform.Icon.PAPER : Platform.Icon.NAME_TAG,
                     Component.text("⚑ " + marker.name(), past ? NamedTextColor.GRAY : NamedTextColor.GOLD), lore), click -> {
                 if (stillWatching(player, session)) {
@@ -183,14 +190,14 @@ final class ControlItems {
             });
         }
         if (shown > 0) {
-            menu.set(45, item(Platform.Icon.ARROW, Component.text("◀ Page précédente", NamedTextColor.YELLOW), List.of()), click -> {
+            menu.set(45, item(Platform.Icon.ARROW, Component.text(Lang.tr("general.previous-page"), NamedTextColor.YELLOW), List.of()), click -> {
                 if (stillWatching(player, session)) {
                     openMarkersMenu(player, session, shown - 1);
                 }
             });
         }
         if (shown < pages - 1) {
-            menu.set(53, item(Platform.Icon.ARROW, Component.text("Page suivante ▶", NamedTextColor.YELLOW), List.of()), click -> {
+            menu.set(53, item(Platform.Icon.ARROW, Component.text(Lang.tr("general.next-page"), NamedTextColor.YELLOW), List.of()), click -> {
                 if (stillWatching(player, session)) {
                     openMarkersMenu(player, session, shown + 1);
                 }

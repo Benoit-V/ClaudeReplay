@@ -1,5 +1,8 @@
 # ClaudeReplay
 
+# Language of the messages: a file of plugins/ClaudeReplay/lang (en, fr, or your own copy).
+language: en
+
 storage:
   # Folder of the saved replays (relative to plugins/ClaudeReplay). Ignored if another plugin sets its own storage.
   folder: replays

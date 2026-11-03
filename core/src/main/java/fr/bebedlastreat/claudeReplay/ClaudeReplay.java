@@ -19,6 +19,7 @@ import fr.bebedlastreat.claudeReplay.recording.RecordingManager;
 import fr.bebedlastreat.claudeReplay.recording.RecordingPacketListener;
 import fr.bebedlastreat.claudeReplay.storage.DefaultMapResolver;
 import fr.bebedlastreat.claudeReplay.storage.FileReplayStorage;
+import fr.bebedlastreat.claudeReplay.util.Lang;
 import fr.bebedlastreat.claudeReplay.util.ServerTicks;
 import fr.bebedlastreat.claudeReplay.util.Threads;
 import org.bukkit.World;
@@ -48,6 +49,7 @@ public final class ClaudeReplay extends JavaPlugin {
     public void onEnable() {
         saveDefaultConfig();
         replayConfig = ReplayConfig.load(this);
+        Lang.load(this, replayConfig.language());
         Platform platform = Platforms.load(this);
         getLogger().info("Server " + platform.minecraftVersion() + " (protocol " + getServerProtocolVersion() + ")");
 

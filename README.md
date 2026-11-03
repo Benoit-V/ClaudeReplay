@@ -108,6 +108,9 @@ from its own map.
 ## Configuration
 
 ```yaml
+# Language of the messages: a file of plugins/ClaudeReplay/lang (en, fr, or your own copy).
+language: en
+
 storage:
   # Folder of the saved replays (relative to plugins/ClaudeReplay).
   folder: replays
@@ -130,6 +133,17 @@ playback:
 ```
 
 Replays are saved as `<id>.crp` (packets) and `<id>.json` (description) in the storage folder.
+
+## Languages
+
+Every message, item and menu text comes from `plugins/ClaudeReplay/lang/<language>.yml`. The plugin ships
+`en.yml` (default) and `fr.yml`, written to that folder on first start; pick one with `language` in `config.yml`.
+
+- Edit a file to change the wording. Placeholders are written `{name}`; colors are set by the plugin.
+- Add a language by copying `en.yml` to, for example, `de.yml`, translating it and setting `language: de`.
+- A key missing from your file falls back to the plugin's own file, so updates never show raw keys.
+
+Changes are applied when the server restarts.
 
 ## API
 

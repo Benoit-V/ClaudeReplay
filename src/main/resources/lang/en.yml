@@ -1,0 +1,168 @@
+# ClaudeReplay - English messages
+# Placeholders are written {name}. A key missing here is taken from the plugin's own file.
+
+general:
+  no-permission: "You don't have permission."
+  players-only: "This command can only be used by players."
+  not-watching: "You are not watching a replay."
+  invalid-number: "Invalid number: {value}"
+  invalid-time: "Invalid time: {value}"
+  previous-page: "◀ Previous page"
+  next-page: "Next page ▶"
+
+help:
+  - "/replay record start [name] [map] | stop [name] | list | marker <name>"
+  - "/replay menu | list | play <replay> | info <replay> | delete <replay>"
+  - "/replay toggle | speed <x> | seek <time> | skip <±seconds> | pov <player> | free | invite <player> | leave"
+
+usage:
+  speed: "/replay speed <0.1-10>"
+  seek: "/replay seek <mm:ss | seconds | ticks t>"
+  skip: "/replay skip <±seconds>"
+  pov: "/replay pov <player>"
+  invite: "/replay invite <player>"
+
+record:
+  started: "Recording of {world} started: {name} (map {map})"
+  stopping: "Stopping and saving {name}..."
+  save-failed: "Saving failed: {error}"
+  saved: "Replay saved: {name} ({duration}) "
+  watch-button: "[Watch]"
+  default-marker: "Marker"
+  marker-added: "Marker added at {time}"
+  none-running: "No recording running."
+  list-entry: "● {name} - {world} - {time} - {players} player(s)"
+  not-found: "Recording not found."
+
+replays:
+  list-failed: "Cannot list the replays: {error}"
+  read-failed: "Cannot read the replays: {error}"
+  none: "No replays."
+  list-header: "Replays ({count})"
+  list-entry: " {date} · {duration} · {players} player(s)"
+  list-hover: "Watch {id}"
+  # java.text.SimpleDateFormat pattern
+  date-format: "MM/dd HH:mm"
+  specify: "Specify the replay (id or name)."
+  not-found: "Replay not found: {query}"
+  too-recent: "This replay comes from a {version} server, newer than this one ({server})."
+  loading: "Loading {name}..."
+  start-failed: "Cannot start the replay: {error}"
+  delete-failed: "Could not delete the replay."
+  deleted: "Replay {name} deleted."
+
+info:
+  id: "Id: {id}"
+  duration: "Duration: {duration} · Version: {version}"
+  unplayable: " (newer than this server: cannot be played here)"
+  players: "Players: {players}"
+  world: "World at {time}: {world} (map {map})"
+  marker: "Marker at {time}: {name}"
+
+viewer:
+  not-in-replay: "{player} is not in this replay."
+  not-online: "{player} is not online."
+  invited: "{player} is watching the replay with you."
+
+playback:
+  error: "Error while playing the replay."
+  free-camera: "Free camera"
+  hud-pov: "POV {player}"
+  pov-of: "Point of view of {player} (sneak to go back to the free camera)"
+
+items:
+  points-of-view:
+    name: "Points of view"
+    lore:
+      - "Right click: choose a player"
+      - "Sneak: back to the free camera"
+  markers:
+    name: "Markers ({count})"
+    lore: "Click: jump to a highlight"
+    lore-none: "No highlights in this replay"
+  backward:
+    name: "⏪ Backward"
+    lore:
+      - "Right click: -10 seconds"
+      - "Left click: -1 minute"
+  play:
+    name: "▶ Play"
+    lore: "Click: resume"
+  pause:
+    name: "⏸ Pause"
+    lore: "Click: pause"
+  forward:
+    name: "⏩ Forward"
+    lore:
+      - "Right click: +10 seconds"
+      - "Left click: +1 minute"
+  speed:
+    name: "Speed x{speed}"
+    lore:
+      - "Right click: faster"
+      - "Left click: slower"
+  controls:
+    name: "Control panel"
+    lore: "Click: show the commands and markers"
+  leave:
+    name: "Leave the replay"
+    lore: "Click: go back where you were"
+
+menus:
+  point-of-view:
+    title: "Point of view"
+    free-camera: "Free camera"
+    free-camera-lore: "Merged view of every player"
+    version: "Version: {version}"
+    unknown-version: "unknown"
+    current: "Current point of view"
+    click: "Click: see through their eyes"
+  markers:
+    title: "Markers"
+    title-page: "Markers {page}/{pages}"
+    none: "No markers in this replay"
+    at: "At {time}"
+    at-past: "At {time} (already passed)"
+    click: "Click: go there"
+  replays:
+    title: "Replays"
+    title-page: "Replays {page}/{pages}"
+    none: "No replays"
+    none-lore: "Start a recording with /replay record start"
+    count: "{count} replay(s)"
+    count-lore:
+      - "Server version: {version}"
+      - "Replays from newer versions"
+      - "cannot be played here."
+    # java.text.SimpleDateFormat pattern
+    date-format: "MM/dd/yyyy HH:mm"
+    date: "Date: "
+    duration: "Duration: "
+    version: "Version: "
+    map: "Map: "
+    maps: "Maps: "
+    markers: "Markers: "
+    players: "Players ({count}):"
+    more-players: " ... and {count} more"
+    watch: "Left click: watch"
+    too-recent: "Newer version than this server"
+    details: "Right click: details in the chat"
+
+controls:
+  header: "━━━━━━ Replay: {name} ━━━━━━"
+  toggle: "Pause / play"
+  backward: "Go back {seconds} seconds"
+  forward: "Go forward {seconds} seconds"
+  slow: "Slow motion"
+  normal: "Normal speed"
+  fast: "Fast"
+  faster: "Very fast"
+  points-of-view: "Points of view: "
+  free: "Free"
+  free-hover: "Free camera (merged view)"
+  pov-hover: "See through the eyes of {player}"
+  markers: "Markers: "
+  marker-hover: "Go to {time}"
+  leave: "Leave"
+  leave-hover: "Leave the replay"
+  tip: "  Tip: use the items of your hotbar, click a player to take their point of view, sneak to go back."

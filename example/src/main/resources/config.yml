@@ -1,0 +1,22 @@
+storage:
+  # file (ClaudeReplay's default local files), mysql or mongodb
+  type: file
+  mysql:
+    # MySQL or MariaDB
+    url: jdbc:mariadb://localhost:3306/minecraft
+    # JDBC driver class (MariaDB's works with MySQL too)
+    driver: org.mariadb.jdbc.Driver
+    user: minecraft
+    password: change-me
+  mongodb:
+    uri: mongodb://localhost:27017
+    database: minecraft
+
+maps:
+  # Folder shared by the servers of a network, containing <mapId>.zip files. Empty = ClaudeReplay's default maps.
+  shared-folder: ''
+
+report:
+  # Worlds always recorded, so that a report saves their last minutes.
+  worlds: [ world ]
+  minutes: 5

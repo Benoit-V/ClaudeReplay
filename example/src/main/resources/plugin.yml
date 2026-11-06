@@ -1,0 +1,35 @@
+name: ClaudeReplayExamples
+version: '1.0'
+main: fr.bebedlastreat.claudeReplay.example.ExamplePlugin
+api-version: '26.3'
+depend: [ ClaudeReplay ]
+description: Examples of the ClaudeReplay API.
+
+# Downloaded from Maven Central by the server.
+libraries:
+  - com.zaxxer:HikariCP:6.2.1
+  - org.mariadb.jdbc:mariadb-java-client:3.5.1
+  - org.mongodb:mongodb-driver-sync:5.2.1
+
+commands:
+  game:
+    description: Starts or ends a recorded game in your world.
+    usage: /game start <name> | end [winner]
+    permission: claudereplay.example.game
+  report:
+    description: Reports a player; staff can watch the last minutes.
+    usage: /report <player> <reason>
+  replaysof:
+    description: Lists the replays of a player.
+    usage: /replaysof <player>
+    permission: claudereplay.example.staff
+
+permissions:
+  claudereplay.example.game:
+    default: op
+  claudereplay.example.staff:
+    description: Receives the reports and can watch the replays of a player.
+    default: op
+  claudereplay.example.hidden:
+    description: Never recorded (staff in vanish...).
+    default: false

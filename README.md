@@ -397,6 +397,13 @@ api.setMapResolver(mapId -> CompletableFuture.supplyAsync(() -> mapManager.downl
 
 The returned folder must contain `level.dat` and the region files. It is only read, never modified.
 
+### Examples
+
+The [`example`](example) folder is a small plugin using the API for real cases: recording mini-game games,
+reports that save the last minutes, staff reviewing the replays of a player, never recording vanished staff,
+maps shared by a network, and storing replays in **MySQL / MariaDB** or **MongoDB**. See its
+[README](example/README.md).
+
 ## Building
 
 ```bash
@@ -411,7 +418,8 @@ The plugin jar is written to `build/libs/`. The project is split into modules:
 | `core`            | Recording, playback, file format, menus, 1.8 → modern conversion | Spigot 1.8.8 API, Java 17 |
 | `platform-legacy` | Spigot 1.8.8 specific code                                       | Spigot 1.8.8 API, Java 17 |
 | `platform-modern` | Paper 26.x specific code                                         | Paper 26.3 API, Java 25   |
+| `example`         | Example plugin using the API (its own jar)                       | Paper 26.3 API, Java 25   |
 
-All modules are bundled into the single plugin jar; the right platform is picked when the server starts.
+All modules except `example` are bundled into the single plugin jar; the right platform is picked when the server starts.
 
 `./gradlew runServer` starts a Paper 26.3 test server in `run/`.

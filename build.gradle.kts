@@ -24,8 +24,8 @@ subprojects {
 
     tasks.withType<JavaCompile>().configureEach {
         options.encoding = "UTF-8"
-        // The common code runs on 1.8.8 forks (Java 17+); only the modern platform may use newer bytecode.
-        options.release = if (project.name == "platform-modern") 25 else 17
+        // The common code runs on 1.8.8 forks (Java 17+); only the modern platform and the examples (Paper) may use newer bytecode.
+        options.release = if (project.name == "platform-modern" || project.name == "example") 25 else 17
     }
 
     dependencies {

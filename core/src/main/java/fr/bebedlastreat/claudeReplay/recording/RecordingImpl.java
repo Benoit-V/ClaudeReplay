@@ -19,6 +19,7 @@ import fr.bebedlastreat.claudeReplay.api.replay.ReplayPlayer;
 import fr.bebedlastreat.claudeReplay.api.replay.ReplayWorld;
 import fr.bebedlastreat.claudeReplay.format.BlockPositions;
 import fr.bebedlastreat.claudeReplay.format.ReplayFileWriter;
+import fr.bebedlastreat.claudeReplay.format.ReplayOutput;
 import fr.bebedlastreat.claudeReplay.format.ReplayRecord;
 import fr.bebedlastreat.claudeReplay.packet.PacketCodec;
 import fr.bebedlastreat.claudeReplay.packet.PacketFilters;
@@ -90,7 +91,9 @@ public final class RecordingImpl implements Recording {
 
     private final Queue<Captured> queue = new ConcurrentLinkedQueue<>();
     private final TickBuffer buffer = new TickBuffer();
-    private final ReplayFileWriter writer;
+    private final ReplayOutput writer;
+    /** A connection of a recorded player, used for the registries when folding a rolling recording. */
+    private volatile User lastUser;
     private final Platform platform = Platforms.get();
 
     private volatile boolean running = true;
@@ -119,8 +122,11 @@ public final class RecordingImpl implements Recording {
         this.trackingMode = options.getTrackingMode();
         this.verifyBlockChanges = plugin.getReplayConfig().verifyBlockChanges();
         this.startServerTick = ServerTicks.current();
-        this.writer = new ReplayFileWriter(file, manager.getIoExecutor(), plugin.getReplayConfig().segmentTicks(),
-                PacketCodec.serverVersion().getProtocolVersion());
+        int protocol = PacketCodec.serverVersion().getProtocolVersion();
+        int segmentTicks = plugin.getReplayConfig().segmentTicks();
+        this.writer = options.getKeepLastTicks() > 0
+                ? new RollingReplayWriter(file, manager.getIoExecutor(), segmentTicks, protocol, options.getKeepLastTicks(), () -> lastUser)
+                : new ReplayFileWriter(file, manager.getIoExecutor(), segmentTicks, protocol);
         enterWorld(options.getWorld(), options.getMapId(), 0);
         for (UUID uuid : options.getPlayers()) {
             Player player = Bukkit.getPlayer(uuid);
@@ -144,6 +150,9 @@ public final class RecordingImpl implements Recording {
 
     void capture(int recipient, Server type, byte[] payload, User user) {
         if (running) {
+            if (lastUser != user) {
+                lastUser = user;
+            }
             queue.add(new Captured(getCurrentTick(), recipient, type, payload, user));
         }
     }
@@ -521,14 +530,13 @@ public final class RecordingImpl implements Recording {
                 PacketCodec.serverVersion().getProtocolVersion(), platform.minecraftVersion(),
                 players, worlds, markers, metadata);
         stopFuture = writer.finish(info)
-                .thenCompose(file -> plugin.getStorage().save(info, file).whenComplete((ignored, error) -> {
+                .thenCompose(saved -> plugin.getStorage().save(saved.info(), saved.file()).whenComplete((ignored, error) -> {
                     try {
-                        Files.deleteIfExists(file);
+                        Files.deleteIfExists(saved.file());
                     } catch (IOException e) {
-                        plugin.getLogger().warning("Cannot delete " + file + ": " + e.getMessage());
+                        plugin.getLogger().warning("Cannot delete " + saved.file() + ": " + e.getMessage());
                     }
-                }))
-                .thenApply(ignored -> info);
+                }).thenApply(ignored -> saved.info()));
         stopFuture.whenComplete((ignored, error) -> {
             if (error != null) {
                 plugin.getLogger().log(Level.SEVERE, "Cannot save the replay " + name + " (" + id + ")", error);

@@ -5,7 +5,7 @@ import com.github.retrooper.packetevents.protocol.packettype.PacketType.Play.Ser
 /**
  * Receives the packets a viewer must see, already filtered and remapped.
  */
-interface PacketSink {
+public interface PacketSink {
 
     void send(Server type, byte[] payload);
 

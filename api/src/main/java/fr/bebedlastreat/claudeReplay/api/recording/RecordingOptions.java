@@ -26,6 +26,7 @@ public final class RecordingOptions {
     private final Set<UUID> players;
     private final Map<String, String> metadata;
     private final int maxDurationTicks;
+    private final int keepLastTicks;
 
     private RecordingOptions(Builder builder) {
         this.name = builder.name;
@@ -35,6 +36,7 @@ public final class RecordingOptions {
         this.players = Collections.unmodifiableSet(new LinkedHashSet<>(builder.players));
         this.metadata = Collections.unmodifiableMap(new LinkedHashMap<>(builder.metadata));
         this.maxDurationTicks = builder.maxDurationTicks;
+        this.keepLastTicks = builder.keepLastTicks;
     }
 
     public static @NotNull Builder builder(@NotNull World world) {
@@ -75,6 +77,14 @@ public final class RecordingOptions {
         return maxDurationTicks;
     }
 
+    /**
+     * Maximum length of the saved replay in ticks. When the recording lasts longer, only its last ticks are kept:
+     * the replay starts later, with the state of the game at that moment. 0 = keep everything.
+     */
+    public int getKeepLastTicks() {
+        return keepLastTicks;
+    }
+
     public static final class Builder {
 
         private final World world;
@@ -84,6 +94,7 @@ public final class RecordingOptions {
         private final Set<UUID> players = new LinkedHashSet<>();
         private final Map<String, String> metadata = new LinkedHashMap<>();
         private int maxDurationTicks;
+        private int keepLastTicks;
 
         private Builder(@NotNull World world) {
             this.world = Objects.requireNonNull(world, "world");
@@ -135,6 +146,19 @@ public final class RecordingOptions {
                 throw new IllegalArgumentException("ticks < 0");
             }
             this.maxDurationTicks = ticks;
+            return this;
+        }
+
+        /**
+         * Keeps only the last {@code ticks} ticks in the saved replay (e.g. {@code 20 * 60 * 5} for the last five
+         * minutes). The recording can run as long as needed: older parts are dropped while it runs.
+         * 0 = keep everything.
+         */
+        public @NotNull Builder keepLastTicks(int ticks) {
+            if (ticks < 0) {
+                throw new IllegalArgumentException("ticks < 0");
+            }
+            this.keepLastTicks = ticks;
             return this;
         }
 

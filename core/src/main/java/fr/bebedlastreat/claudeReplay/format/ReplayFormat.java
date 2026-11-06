@@ -77,7 +77,7 @@ public final class ReplayFormat {
         return bytes;
     }
 
-    static void writeRecord(DataOutput out, ReplayRecord record, ToIntFunction<Server> typeIndex) throws IOException {
+    public static void writeRecord(DataOutput out, ReplayRecord record, ToIntFunction<Server> typeIndex) throws IOException {
         VarInts.write(out, record.tick());
         if (record instanceof ReplayRecord.Packet packet) {
             out.writeByte(KIND_PACKET);
@@ -135,7 +135,7 @@ public final class ReplayFormat {
      * Reads a record. Returns null for packets whose type is unknown to this server (kept readable for
      * forward compatibility).
      */
-    static ReplayRecord readRecord(DataInput in, IntFunction<Server> types) throws IOException {
+    public static ReplayRecord readRecord(DataInput in, IntFunction<Server> types) throws IOException {
         int tick = VarInts.read(in);
         byte kind = in.readByte();
         switch (kind) {

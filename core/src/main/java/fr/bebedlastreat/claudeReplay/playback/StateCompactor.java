@@ -56,7 +56,7 @@ import java.util.UUID;
  * tab list, teams, objectives, scores, boss bars, time, weather and world border keep their last value.
  * Short-lived effects (sounds, particles, animations...) are dropped.
  */
-final class StateCompactor implements PacketSink {
+public final class StateCompactor implements PacketSink {
 
     private static final int KEPT_CHAT_LINES = 20;
     private static final int KEPT_ATTRIBUTE_PACKETS = 16;
@@ -164,7 +164,7 @@ final class StateCompactor implements PacketSink {
         final Set<String> members = new LinkedHashSet<>();
     }
 
-    StateCompactor(User user) {
+    public StateCompactor(User user) {
         this.user = user;
     }
 
@@ -179,7 +179,7 @@ final class StateCompactor implements PacketSink {
     }
 
     /** The viewer changed world: entities and blocks of the previous world are gone. */
-    void onWorldChange() {
+    public void onWorldChange() {
         entities.clear();
         blockEntities.clear();
         blockChanges.clear();
@@ -555,7 +555,7 @@ final class StateCompactor implements PacketSink {
     }
 
     /** Sends the resulting state. */
-    void flushTo(PacketSink out) {
+    public void flushTo(PacketSink out) {
         // Tab list, grouped by the set of fields known for each entry.
         Map<EnumSet<WrapperPlayServerPlayerInfoUpdate.Action>, List<WrapperPlayServerPlayerInfoUpdate.PlayerInfo>> groups = new LinkedHashMap<>();
         for (InfoState state : infos.values()) {

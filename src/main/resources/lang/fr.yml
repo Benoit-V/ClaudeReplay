@@ -11,7 +11,7 @@ general:
   next-page: "Page suivante ▶"
 
 help:
-  - "/replay record start [nom] [map] | stop [nom] | list | marker <nom>"
+  - "/replay record start [nom] [map] [dernièresSecondes] | stop [nom] | list | marker <nom>"
   - "/replay menu | list | play <replay> | info <replay> | delete <replay>"
   - "/replay toggle | speed <x> | seek <temps> | skip <±secondes> | pov <joueur> | free | invite <joueur> | leave"
 
@@ -30,6 +30,7 @@ record:
   watch-button: "[Regarder]"
   default-marker: "Marqueur"
   marker-added: "Marqueur ajouté à {time}"
+  keeping: "Seules les {seconds} dernières secondes seront gardées dans le replay."
   none-running: "Aucun enregistrement en cours."
   list-entry: "● {name} - {world} - {time} - {players} joueur(s)"
   not-found: "Enregistrement introuvable."

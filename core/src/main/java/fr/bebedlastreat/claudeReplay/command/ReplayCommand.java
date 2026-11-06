@@ -117,9 +117,25 @@ public final class ReplayCommand implements TabExecutor {
                 if (args.length > 3) {
                     options.mapId(args[3]);
                 }
+                int keepSeconds = 0;
+                if (args.length > 4) {
+                    try {
+                        keepSeconds = Integer.parseInt(args[4]);
+                    } catch (NumberFormatException e) {
+                        keepSeconds = -1;
+                    }
+                    if (keepSeconds < 0) {
+                        error(sender, Lang.tr("general.invalid-number", "value", args[4]));
+                        return;
+                    }
+                    options.keepLastTicks(keepSeconds * 20);
+                }
                 Recording recording = plugin.getRecordingManager().start(options.build());
                 Text.send(sender, Component.text(Lang.tr("record.started", "world", world.getName(), "name", recording.getName(),
                         "map", recording.getMapId()), NamedTextColor.GREEN));
+                if (keepSeconds > 0) {
+                    info(sender, Lang.tr("record.keeping", "seconds", keepSeconds));
+                }
             }
             case "stop" -> {
                 RecordingImpl recording = findRecording(sender, args.length > 2 ? args[2] : null);

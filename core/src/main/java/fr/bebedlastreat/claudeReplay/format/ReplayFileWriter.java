@@ -24,7 +24,7 @@ import java.util.zip.DeflaterOutputStream;
  * Writes a replay file. Records are serialized on the calling thread (the main thread), segments are compressed
  * and written on the given IO executor, which must run tasks sequentially.
  */
-public final class ReplayFileWriter {
+public final class ReplayFileWriter implements ReplayOutput {
 
     private static final int MAX_SEGMENT_BYTES = 4 * 1024 * 1024;
 
@@ -71,7 +71,7 @@ public final class ReplayFileWriter {
         });
     }
 
-    /** Appends a record. Records must be given in tick order. */
+    @Override
     public void write(ReplayRecord record) {
         if (segmentStart >= 0 && (record.tick() - segmentStart >= segmentTicks || segmentBytes.size() >= MAX_SEGMENT_BYTES)) {
             flushSegment();
@@ -126,10 +126,11 @@ public final class ReplayFileWriter {
     }
 
     /** Writes the last segment and the footer, then closes the file. */
-    public CompletableFuture<Path> finish(ReplayInfo info) {
+    @Override
+    public CompletableFuture<Saved> finish(ReplayInfo info) {
         flushSegment();
         List<String> names = List.copyOf(typeNames);
-        CompletableFuture<Path> future = new CompletableFuture<>();
+        CompletableFuture<Saved> future = new CompletableFuture<>();
         io.execute(() -> {
             try {
                 if (failure != null) {
@@ -160,7 +161,7 @@ public final class ReplayFileWriter {
                 output.setLength(output.getFilePointer());
                 output.close();
                 closed = true;
-                future.complete(file);
+                future.complete(new Saved(file, info));
             } catch (Throwable t) {
                 closeQuietly();
                 future.completeExceptionally(t);
@@ -169,7 +170,7 @@ public final class ReplayFileWriter {
         return future;
     }
 
-    /** Stops writing and deletes the file. */
+    @Override
     public void abort() {
         io.execute(() -> {
             closeQuietly();

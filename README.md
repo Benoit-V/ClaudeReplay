@@ -42,7 +42,7 @@ The main command is `/replay` (aliases `/replays`, `/crp`).
 
 | Command                                    | Permission            | Description                                   |
 |--------------------------------------------|-----------------------|-----------------------------------------------|
-| `/replay record start [name] [map]`        | `claudereplay.record` | Records your current world                    |
+| `/replay record start [name] [map] [lastSeconds]` | `claudereplay.record` | Records your current world (optionally keeping only its last seconds) |
 | `/replay record stop [name]`               | `claudereplay.record` | Stops and saves a recording                   |
 | `/replay record list`                      | `claudereplay.record` | Lists running recordings                      |
 | `/replay record marker <name>`             | `claudereplay.record` | Adds a marker to a recording                  |
@@ -212,6 +212,24 @@ recording.stop().thenAccept(replay ->
 ```
 
 `stop()` completes on the main thread once the replay is saved. `cancel()` stops without saving.
+
+#### Keeping only the last ticks
+
+A recording can be limited to its last ticks, for example to always have the last five minutes of a game at hand
+for a report:
+
+```java
+Recording recording = api.startRecording(RecordingOptions.builder(world)
+        .keepLastTicks(20 * 60 * 5)
+        .build());
+```
+
+When the recording lasts longer, the saved replay starts later: it begins with the state of the game at that
+moment (entities, tab list, scoreboards, world changes...) and its markers and duration are adjusted. Older parts
+are dropped while the recording runs, so it can run as long as needed; the kept part stays in memory, compressed,
+until the recording stops.
+
+Unlike `maxDurationTicks`, which stops the recording, `keepLastTicks` never stops it.
 
 #### Tracking modes
 
